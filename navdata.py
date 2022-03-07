@@ -37,8 +37,6 @@ class Country:
         print(cls)
 
 
-
-
 def loadAiracData(inputFile="VATSpy.json"):
     """
     Loads data from an input .json file and inserts it into the database.
@@ -136,7 +134,8 @@ def loadAiracData(inputFile="VATSpy.json"):
             failedCount = 0
 
             for i, y in items:
-                airport = Airport(y["icao"], y["name"], y["latitude"], y["longitude"], y["iata"], y["fir"], y["isPseudo"])
+                airport = Airport(y["icao"], y["name"], y["latitude"], y["longitude"], y["iata"], y["fir"],
+                                  y["isPseudo"])
                 print(airport)
 
                 check = tools.checkDuplicate(con, x, "icao", y["icao"])
