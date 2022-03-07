@@ -1,9 +1,9 @@
 # To Do
 
 ## Tooling
-- [x] Establish Database
+- [x] Establish Database 💽
 - [ ] Build importer for VATSPY Data project
-- [ ] Parse VATSPY Airports and airspace boundaries
+- [ ] Parse VATSPY Airports 🛃 and airspace ☁️ boundaries
 - 
 
 ## Flights
@@ -11,7 +11,7 @@
 - [ ] If flights are within X+Y degrees of destination airport maybe flag as completed in case of disconnect?
 - [ ] If flights are over X+Y degrees away from destination, flag as incomplete pending state? If reconnect within 3 hours, flag as complete?
 - [ ] Always count departures when X degrees away from departure field.
-- [ ] Do not count pre-filed flightplans.
+- [ ] Do not count pre-filed flightplans. ❌
 
 
 
