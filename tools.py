@@ -152,7 +152,7 @@ def insert_airport(con, airport):
     :param airport:
     :return:
     """
-    check = check_duplicate(con, 'airports', 'icao', airport[0])
+    check = check_duplicate(con, 'airports', 'icao', airport.icao)
 
     if check is True:
         sql = '''UPDATE airports SET (
@@ -164,19 +164,23 @@ def insert_airport(con, airport):
                     airports.fir={5},
                     airports.isPseudo={6}
                     ) WHERE id={7}'''.format(
-            airport[0], airport[1], airport[2], airport[3], airport[4], airport[5], airport[6], check[1])
+            airport.icao, airport.name, airport.latitude, airport.longitude, airport.iata, airport.fir,
+            airport.is_pseudo, check[1])
         action = "update"
     else:
-        sql = ''' REPLACE INTO airports (icao, name, latitude, longitude, iata, fir, isPseudo) VALUES (?,?,?,?,?,?,?)'''
+        sql = ''' REPLACE INTO airports (icao, name, latitude, longitude, iata, fir, isPseudo) 
+                    VALUES ('{0}','{1}','{2}','{3}','{4}','{5}','{6}')'''.format(
+            airport.icao, airport.name, airport.latitude, airport.longitude, airport.iata, airport.fir,
+            airport.is_pseudo)
         action = "insert"
 
     try:
         cur = con.cursor()
-        cur.execute(sql, airport)
+        cur.execute(sql)
         con.commit()
         return True, cur.lastrowid, action
     except Error as e:
-        print("Failed to {} airport {} :".format(action, airport[0]), e)
+        print("Failed to {} airport {} :".format(action, airport.icao), e)
         return False
 
 
@@ -198,6 +202,3 @@ def check_duplicate(con, table, value1, value2):
         return False
     else:
         return True, row[0]
-
-
-

@@ -6,7 +6,7 @@ import tools
 from sqlite3 import Error
 
 
-def loadAiracData(inputFile, verbose):
+def load_airac_data(inputFile, verbose):
     """
     Loads data from an input .json file and inserts it into the database.
     :param inputFile:
@@ -37,14 +37,16 @@ def loadAiracData(inputFile, verbose):
         con = tools.connect_db(db)
         tools.create_base_tables(con)
     else:
-        os.abort()
+        print("You're in production. This application is not ready for that yet.")
+        os.abort() # FIXME - Implement solution for production.
 
-    total_insert = 0
-    total_failed = 0
-    total_skip = 0
+    total_insert = total_failed = total_skip = 0
 
     # Loop through the VATSpy data JSON file.
     for x in data_json:
+        insert_count = skip_count = failed_count = 0
+        items = data_json[x].items()
+
         if x == "general":
             items = list(data_json['general'].values())
             general = items[0], items[1], items[2]
@@ -52,36 +54,28 @@ def loadAiracData(inputFile, verbose):
             try:
                 update_general = tools.insert_general(con, general)
                 if update_general:
-                    if verbose is True:
+                    if verbose:
                         print("Inserted {}".format(general))
                 else:
                     print("Updating general info failed!")
             except Error as e:
                 print("Updating general info failed...", e)
 
-            if verbose is True:
+            if verbose:
                 print(data_json['general']['version'])
 
         if x == "countries":
-            items = data_json['countries'].items()
-
-            insert_count = 0
-            skip_count = 0
-            failed_count = 0
-
             for i, y in items:
-                # print("{} : {}".format(y["code"], y["name"]),
-                # "{type}".format(type="({})".format(y["type"]) if y["type"] != "" else "")) # DEBUG
-
+                # Verify if the item already exist
                 check = tools.check_duplicate(con, x, "code", y["code"])
 
                 if check is False:
                     country = Country(y["name"], y["code"], y["type"])
                     try:
-                        createCountry = tools.insert_country(con, country)
+                        create_country = tools.insert_country(con, country)
                         insert_count += 1
-                        if verbose is True:
-                            print("{} {}".format(createCountry[2], country))
+                        if verbose:
+                            print("{} {}".format(create_country[2], country))
                     except Error as e:
                         print("Failed.", e)
                         failed_count += 1
@@ -90,21 +84,22 @@ def loadAiracData(inputFile, verbose):
                         print("{} already exists in the database...".format(y["code"]))
                     skip_count += 1
 
+            # When done with this category, print a summary of what has been done
             print("Countries --- Inserted: {} - Failed: {} - Skipped: {}".format(insert_count, failed_count,
                                                                                  skip_count))
+
+            # Add to the total counters of actions
             total_insert += insert_count
             total_failed += failed_count
             total_skip += skip_count
 
         if x == "airports":
-            items = data_json['airports'].items()
-
-            insert_count = skip_count = failed_count = 0
-
             for i, y in items:
+
                 airport = Airport(y["icao"], y["name"], y["latitude"], y["longitude"], y["iata"], y["fir"],
                                   y["isPseudo"])
-                if verbose is True:
+
+                if verbose:
                     print(airport)
 
                 check = tools.check_duplicate(con, x, "icao", y["icao"])
@@ -114,21 +109,22 @@ def loadAiracData(inputFile, verbose):
                         print(create_airport)
                         if create_airport:
                             insert_count += 1
+
                     except Error as e:
                         print("Failed to insert airport", e)
                         failed_count += 1
                 else:
                     skip_count += 1
 
+            # When done with this category, print a summary of what has been done
             print("Airports --- Inserted: {} - Failed: {} - Skipped: {}".format(insert_count, failed_count,
                                                                                 skip_count))
+            # Add to the total counters of actions
             total_insert += insert_count
             total_failed += failed_count
             total_skip += skip_count
 
         if x == "firs":
-
-
             pass
 
         if x == "uirs":
@@ -136,7 +132,6 @@ def loadAiracData(inputFile, verbose):
 
         if x == "idl":
             pass
-
 
     # Outside loop
     print("--------------")
@@ -159,4 +154,4 @@ if __name__ == '__main__':
     if not args.filename:
         print("You must specify a filename with -f. Use --help for more info.")
 
-    loadAiracData(args.filename, args.verbose)
+    load_airac_data(args.filename, args.verbose)

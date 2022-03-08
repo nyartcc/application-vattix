@@ -13,8 +13,8 @@ class General:
 class Airport:
     icao: str = None
     name: str = None
-    latitude: float = None
-    longitude: float = None
+    latitude: str = None
+    longitude: str = None
     iata: str = None
     fir: str = None
     is_pseudo: int = 0
