@@ -17,16 +17,19 @@ def load_airac_data(inputFile, verbose):
     with open(inputFile) as data_file:
         data_json = json.load(data_file)
 
+    # Mumbo jumbo to ensure environment variables are initialized properly.
+    # If none are set, assume we're in dev.
     if os.environ.get('env') is not None:
         environment = os.environ['env']
     else:
         environment = os.environ.get('env')
 
-    # Check if we're in production or not.
+    # Check if we're in development or not.
     if environment != "prod":
+        # Use a local sqlite database file
         databaseFile = "dev.db"
 
-        # Check if the dev db exists, if not, create one.
+        # Check if the dev db file exists, if not, create one.
         if not os.path.isfile(databaseFile):
             # If there is no development database, this needs to be created first. Raise an alert to notify about this.
             raise FileNotFoundError("No database exits. Aborting.")
@@ -37,8 +40,8 @@ def load_airac_data(inputFile, verbose):
         con = tools.connect_db(db)
         tools.create_base_tables(con)
     else:
-        print("You're in production. This application is not ready for that yet.")
-        os.abort() # FIXME - Implement solution for production.
+        print("You're in production. This application is not ready for that yet. Sowwy...")
+        os.abort()  # FIXME - Implement solution for production.
 
     total_insert = total_failed = total_skip = 0
 
@@ -125,7 +128,35 @@ def load_airac_data(inputFile, verbose):
             total_skip += skip_count
 
         if x == "firs":
-            pass
+            for i, y in items:
+                fir = Fir(y["icao"], y["name"], y["callsignprefix"], y["firboundary"])
+
+                if verbose:
+                    print(fir)
+
+                check = tools.check_duplicate(con, x, "firs", fir.icao)
+                if check is False:
+                    try:
+                        create_fir = tools.insert_fir(con, fir)
+                        if verbose:
+                            print(create_fir)
+                        if create_fir:
+                            insert_count += 1
+                    except Error as e:
+                        print("Failed to create FIR", e)
+                        failed_count += 1
+                else:
+                    skip_count += 1
+                    if verbose:
+                        print("Skipped FIR {}".format(fir.icao))
+
+            # When done with this category, print a summary of what has been done
+            print("Airports --- Inserted: {} - Failed: {} - Skipped: {}".format(insert_count, failed_count,
+                                                                                skip_count))
+            # Add to the total counters of actions
+            total_insert += insert_count
+            total_failed += failed_count
+            total_skip += skip_count
 
         if x == "uirs":
             pass

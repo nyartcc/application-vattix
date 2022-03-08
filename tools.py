@@ -184,6 +184,41 @@ def insert_airport(con, airport):
         return False
 
 
+def insert_fir(con, fir):
+    """
+    Insert or update an FIR in the database.
+    :param con: The SQL connection
+    :param fir: The FIR object, consisting of an ICAO, Name, Callsign Prefix and FIR Boundary
+    :return: If successful - True, the ID of the last inserted row as well as what action [insert/update] was performed
+             If failed - False
+    """
+    check = check_duplicate(con, "fir", "icao", fir.icao)
+
+    if check is True:
+        sql = '''UPDATE firs SET (
+                firs.icao={0},
+                firs.name={1},
+                firs.callsignprefix={2},
+                firs.firboundary={3}
+                ) WHERE id={4}'''.format(
+            fir.icao, fir.name, fir.callsign_prefix, fir.fir_boundary, check[1])
+        action = "update"
+    else:
+        sql = ''' REPLACE INTO firs (icao, name, callsignprefix, firboundary) VALUES (
+        '{0}', '{1}', '{2}', '{3}')'''.format(
+            fir.icao, fir.name, fir.callsign_prefix, fir.fir_boundary)
+        action = "insert"
+
+    try:
+        cur = con.cursor()
+        cur.execute(sql)
+        con.commit()
+        return True, cur.lastrowid, action
+    except Error as e:
+        print("Failed to {} fir {}:".format(action, fir.icao), e)
+        return False
+
+
 def check_duplicate(con, table, value1, value2):
     """
     Checks if a row already exists in the table specified

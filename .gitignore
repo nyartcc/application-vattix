@@ -7,6 +7,7 @@ json_data.json
 
 # Local Dev stuff
 dev.db
+scratch.py # Scratch file.
 
 ## Submodule, so ignore it.
 vatspy_dat_converter/
@@ -19,6 +20,7 @@ vatspy_dat_converter/
 __pycache__/
 *.py[cod]g
 *$py.class
+.DS_Store
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
