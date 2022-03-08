@@ -5,7 +5,7 @@ import sqlite3
 from sqlite3 import Error
 
 
-def connectDb(db_file):
+def connect_db(db_file):
     con = None
     try:
         con = sqlite3.connect(db_file)
@@ -14,36 +14,36 @@ def connectDb(db_file):
         print(e)
 
 
-def create_table(con, createTableSql):
+def create_table(con, create_table_sql):
     """
     Create a table using the createTableSql statement
     :param con: The connection object
-    :param createTableSql: an SQL Statement to CREATE TABLE´
+    :param create_table_sql: an SQL Statement to CREATE TABLE´
     :return:
     """
     try:
         c = con.cursor()
-        c.execute(createTableSql)
+        c.execute(create_table_sql)
         return True
     except Error as e:
         print(e)
         return False
 
 
-def createBaseTables(con):
+def create_base_tables(con):
     """
 
     :param con:
     :return:
     """
     # Queries for creating tables if they do not exist.
-    sqlCreateCountryTable = """ CREATE TABLE IF NOT EXISTS countries (
+    sql_create_country_table = """ CREATE TABLE IF NOT EXISTS countries (
                                             id integer PRIMARY KEY,
                                             name text NOT NULL,
                                             code text,
                                             type text
                                         );"""
-    sqlCreateAirportTable = """ CREATE TABLE IF NOT EXISTS airports (
+    sql_create_airport_table = """ CREATE TABLE IF NOT EXISTS airports (
                                             id integer PRIMARY KEY,
                                             icao text NOT NULL,
                                             name text,
@@ -54,25 +54,25 @@ def createBaseTables(con):
                                             test text,
                                             isPseudo bool default 0
                                         );"""
-    sqlCreateFirTable = """ CREATE TABLE IF NOT EXISTS firs (
+    sql_create_fir_table = """ CREATE TABLE IF NOT EXISTS firs (
                                         id integer PRIMARY KEY,
                                         icao text NOT NULL,
                                         name text,
                                         callsignprefix text,
                                         firboundary text
                                     );"""
-    sqlCreateUirTable = """ CREATE TABLE IF NOT EXISTS uirs (
+    sql_create_uir_table = """ CREATE TABLE IF NOT EXISTS uirs (
                                         id integer PRIMARY KEY,
                                         prefix text,
                                         name text,
                                         coveragefirs text
                                     );"""
-    sqlCreateIdlTable = """ CREATE TABLE IF NOT EXISTS idl (
+    sql_create_idl_table = """ CREATE TABLE IF NOT EXISTS idl (
                                                 id integer PRIMARY KEY,
                                                 cord1 text,
                                                 cord2 text
                                             );"""
-    sqlCreateGeneralTable = """ CREATE TABLE IF NOT EXISTS general (
+    sql_create_general_table = """ CREATE TABLE IF NOT EXISTS general (
                                                 id integer PRIMARY KEY,
                                                 version text,
                                                 lastupdated int,
@@ -81,12 +81,12 @@ def createBaseTables(con):
 
     # If connection is successful, run the SQL to create the tables.
     try:
-        create_table(con, sqlCreateCountryTable)
-        create_table(con, sqlCreateAirportTable)
-        create_table(con, sqlCreateFirTable)
-        create_table(con, sqlCreateUirTable)
-        create_table(con, sqlCreateIdlTable)
-        create_table(con, sqlCreateGeneralTable)
+        create_table(con, sql_create_country_table)
+        create_table(con, sql_create_airport_table)
+        create_table(con, sql_create_fir_table)
+        create_table(con, sql_create_uir_table)
+        create_table(con, sql_create_idl_table)
+        create_table(con, sql_create_general_table)
         print("Success")
         return True
     except Error as e:
@@ -145,7 +145,7 @@ def insert_country(con, country):
         return False
 
 
-def insertAirport(con, airport):
+def insert_airport(con, airport):
     """
 
     :param con:

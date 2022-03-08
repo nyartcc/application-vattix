@@ -34,8 +34,8 @@ def loadAiracData(inputFile, verbose):
             print("Development database OK.")
             db = databaseFile
 
-        con = tools.connectDb(db)
-        tools.createBaseTables(con)
+        con = tools.connect_db(db)
+        tools.create_base_tables(con)
     else:
         os.abort()
 
@@ -110,7 +110,7 @@ def loadAiracData(inputFile, verbose):
                 check = tools.check_duplicate(con, x, "icao", y["icao"])
                 if check is False:
                     try:
-                        create_airport = tools.insertAirport(con, airport)
+                        create_airport = tools.insert_airport(con, airport)
                         print(create_airport)
                         if create_airport:
                             insert_count += 1
