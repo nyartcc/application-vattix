@@ -1,8 +1,14 @@
-import json
-import os
-import os.path
 import sqlite3
 from sqlite3 import Error
+import helper
+
+config = helper.read_config()
+country_table = config['DatabaseSettings']['countries_table']
+airport_table = config['DatabaseSettings']['airports_table']
+general_table = config['DatabaseSettings']['general_table']
+fir_table = config['DatabaseSettings']['firs_table']
+uir_table = config['DatabaseSettings']['uirs_table']
+idl_table = config['DatabaseSettings']['idl_table']
 
 
 def connect_db(db_file):
@@ -32,18 +38,17 @@ def create_table(con, create_table_sql):
 
 def create_base_tables(con):
     """
-
     :param con:
     :return:
     """
     # Queries for creating tables if they do not exist.
-    sql_create_country_table = """ CREATE TABLE IF NOT EXISTS countries (
+    sql_create_country_table = ''' CREATE TABLE IF NOT EXISTS {0} (
                                             id integer PRIMARY KEY,
                                             name text NOT NULL,
                                             code text,
                                             type text
-                                        );"""
-    sql_create_airport_table = """ CREATE TABLE IF NOT EXISTS airports (
+                                        );'''.format(country_table)
+    sql_create_airport_table = """ CREATE TABLE IF NOT EXISTS {0} (
                                             id integer PRIMARY KEY,
                                             icao text NOT NULL,
                                             name text,
@@ -53,31 +58,31 @@ def create_base_tables(con):
                                             fir text,
                                             test text,
                                             isPseudo bool default 0
-                                        );"""
-    sql_create_fir_table = """ CREATE TABLE IF NOT EXISTS firs (
+                                        );""".format(airport_table)
+    sql_create_fir_table = """ CREATE TABLE IF NOT EXISTS {0} (
                                         id integer PRIMARY KEY,
                                         icao text NOT NULL,
                                         name text,
                                         callsignprefix text,
                                         firboundary text
-                                    );"""
-    sql_create_uir_table = """ CREATE TABLE IF NOT EXISTS uirs (
+                                    );""".format(fir_table)
+    sql_create_uir_table = """ CREATE TABLE IF NOT EXISTS {0} (
                                         id integer PRIMARY KEY,
                                         prefix text,
                                         name text,
                                         coveragefirs text
-                                    );"""
-    sql_create_idl_table = """ CREATE TABLE IF NOT EXISTS idl (
+                                    );""".format(uir_table)
+    sql_create_idl_table = """ CREATE TABLE IF NOT EXISTS {0} (
                                                 id integer PRIMARY KEY,
                                                 cord1 text,
                                                 cord2 text
-                                            );"""
-    sql_create_general_table = """ CREATE TABLE IF NOT EXISTS general (
+                                            );""".format(idl_table)
+    sql_create_general_table = """ CREATE TABLE IF NOT EXISTS {0} (
                                                 id integer PRIMARY KEY,
                                                 version text,
                                                 lastupdated int,
                                                 vatspydata text
-                                                );"""
+                                                );""".format(general_table)
 
     # If connection is successful, run the SQL to create the tables.
     try:
@@ -96,19 +101,19 @@ def create_base_tables(con):
 
 def insert_general(con, general):
     """
-
-    :param con:
-    :param general:
-    :return:
+    Insert or update the general settings
+    :param con: The connection object.
+    :param general: The object with the information about the general information that one wish to insert in
+                    the database.
+    :return: True - If the query is successful, along with the row id of the inserted row.
     """
 
-    check = check_duplicate(con, 'general', 'id', 1)
-
+    check = check_duplicate(con, general_table, 'id', 1)
     if check is not True:
-        sql = ''' REPLACE INTO general('version', 'lastUpdated', 'vatspyData')
-                    VALUES(?,?,?)'''
+        sql = ''' REPLACE INTO {}('version', 'lastUpdated', 'vatspyData')
+                    VALUES(?,?,?)'''.format(general_table)
     else:
-        sql = ''' UPDATE general SET version=?, lastupdated=?, vatspydata=? WHERE id=1'''
+        sql = ''' UPDATE {} SET version=?, lastupdated=?, vatspydata=? WHERE id=1'''.format(general_table)
 
     cur = con.cursor()
     cur.execute(sql, general)
@@ -124,24 +129,24 @@ def insert_country(con, country):
     :return: True if successful along with the id of the row inserted.
     """
 
-    check = check_duplicate(con, 'countries', 'code', country[1])
+    check = check_duplicate(con, country_table, 'code', country.code)
 
     if check is True:
         sql = '''UPDATE countries SET countries.name={0}, countries.code={1}, countries.type={2} WHERE id={3}'''.format(
-            country[0], country[1], country[2], check[1])
+                    country.name, country.code, country.type, check[1])
         action = "Updated"
     else:
         sql = ''' REPLACE INTO countries('name', 'code', 'type')
-                VALUES(?,?,?)'''
+                    VALUES("{}","{}","{}")'''.format(country.name, country.code, country.type)
         action = "Inserted"
 
     try:
         cur = con.cursor()
-        cur.execute(sql, country)
+        cur.execute(sql)
         con.commit()
         return True, cur.lastrowid, action
     except Error as e:
-        print("WTF?", e)
+        print("Failed to insert country {}. Error:".format(country.name), e)
         return False
 
 
@@ -169,7 +174,7 @@ def insert_airport(con, airport):
         action = "update"
     else:
         sql = ''' REPLACE INTO airports (icao, name, latitude, longitude, iata, fir, isPseudo) 
-                    VALUES ('{0}','{1}','{2}','{3}','{4}','{5}','{6}')'''.format(
+                    VALUES ("{0}","{1}","{2}","{3}","{4}","{5}","{6}")'''.format(
             airport.icao, airport.name, airport.latitude, airport.longitude, airport.iata, airport.fir,
             airport.is_pseudo)
         action = "insert"
@@ -192,7 +197,7 @@ def insert_fir(con, fir):
     :return: If successful - True, the ID of the last inserted row as well as what action [insert/update] was performed
              If failed - False
     """
-    check = check_duplicate(con, "fir", "icao", fir.icao)
+    check = check_duplicate(con, "firs", "icao", fir.icao)
 
     if check is True:
         sql = '''UPDATE firs SET (
@@ -204,8 +209,8 @@ def insert_fir(con, fir):
             fir.icao, fir.name, fir.callsign_prefix, fir.fir_boundary, check[1])
         action = "update"
     else:
-        sql = ''' REPLACE INTO firs (icao, name, callsignprefix, firboundary) VALUES (
-        '{0}', '{1}', '{2}', '{3}')'''.format(
+        sql = ''' REPLACE INTO firs (icao, name, callsignprefix, firboundary) 
+        VALUES ('{0}','{1}','{2}','{3}')'''.format(
             fir.icao, fir.name, fir.callsign_prefix, fir.fir_boundary)
         action = "insert"
 
@@ -215,7 +220,7 @@ def insert_fir(con, fir):
         con.commit()
         return True, cur.lastrowid, action
     except Error as e:
-        print("Failed to {} fir {}:".format(action, fir.icao), e)
+        print("Failed to {} thing {}:".format(action, fir.icao), e)
         return False
 
 

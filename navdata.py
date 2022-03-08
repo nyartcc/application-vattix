@@ -6,7 +6,7 @@ import tools
 from sqlite3 import Error
 
 
-def load_airac_data(inputFile, verbose):
+def load_airac_data(inputFile, verbose, skip):
     """
     Loads data from an input .json file and inserts it into the database.
     :param inputFile:
@@ -50,7 +50,7 @@ def load_airac_data(inputFile, verbose):
         insert_count = skip_count = failed_count = 0
         items = data_json[x].items()
 
-        if x == "general":
+        if x == "general" and skip != "countries":
             items = list(data_json['general'].values())
             general = items[0], items[1], items[2]
 
@@ -67,7 +67,7 @@ def load_airac_data(inputFile, verbose):
             if verbose:
                 print(data_json['general']['version'])
 
-        if x == "countries":
+        if x == "countries" and skip != "countries":
             for i, y in items:
                 # Verify if the item already exist
                 check = tools.check_duplicate(con, x, "code", y["code"])
@@ -78,7 +78,7 @@ def load_airac_data(inputFile, verbose):
                         create_country = tools.insert_country(con, country)
                         insert_count += 1
                         if verbose:
-                            print("{} {}".format(create_country[2], country))
+                            print("{}".format(create_country[2]))
                     except Error as e:
                         print("Failed.", e)
                         failed_count += 1
@@ -96,7 +96,7 @@ def load_airac_data(inputFile, verbose):
             total_failed += failed_count
             total_skip += skip_count
 
-        if x == "airports":
+        if x == "airports" and skip != "airports":
             for i, y in items:
 
                 airport = Airport(y["icao"], y["name"], y["latitude"], y["longitude"], y["iata"], y["fir"],
@@ -129,12 +129,11 @@ def load_airac_data(inputFile, verbose):
 
         if x == "firs":
             for i, y in items:
-                fir = Fir(y["icao"], y["name"], y["callsignprefix"], y["firboundary"])
-
+                fir = Fir(y["icao"], y["name"], y["callsignPrefix"], y["firBoundary"])
                 if verbose:
                     print(fir)
 
-                check = tools.check_duplicate(con, x, "firs", fir.icao)
+                check = tools.check_duplicate(con, x, "icao", fir.icao)
                 if check is False:
                     try:
                         create_fir = tools.insert_fir(con, fir)
@@ -178,6 +177,7 @@ if __name__ == '__main__':
 
     # -f FILE
     parser.add_argument("-f", "--filename", help="The path to the input file", default="VATSpy.json")
+    parser.add_argument("-s", "--skip", help="(Optional) Pass in a JSON object to be skipped to save debug time")
     parser.add_argument("-v", "--verbose", help="(Optional) Add verbose debugging output",
                         default=False, action='store_true')
     args = parser.parse_args()
@@ -185,4 +185,4 @@ if __name__ == '__main__':
     if not args.filename:
         print("You must specify a filename with -f. Use --help for more info.")
 
-    load_airac_data(args.filename, args.verbose)
+    load_airac_data(args.filename, args.verbose, args.skip)
