@@ -2,7 +2,6 @@ import argparse
 import os.path
 import db_init
 import calc_functions
-from math import acos, sin, cos
 
 from vatsim_data import get_vatsim_data, get_vatsim_status
 
@@ -17,12 +16,9 @@ if __name__ == '__main__':
             print("Database did not exist. Created new file " + db_name)
         else:
             print("Database exists... Continue.")
-    else:
-        pass
 
     statusJson = get_vatsim_status()
     data = statusJson["v3"].pop()
-
 
     parser = argparse.ArgumentParser()
 
@@ -39,8 +35,7 @@ if __name__ == '__main__':
     pilot2 = live_data["pilots"][1]
 
     d = calc_functions.distanceBetweenCoordinates(pilot1["latitude"], pilot1["longitude"],
-                                                  pilot2["latitude"],pilot2["longitude"])
-
+                                                  pilot2["latitude"], pilot2["longitude"])
 
     # Todo: Calculate distance a pilot has travelled since the last update.
     # Need to check their current position against the last position.
