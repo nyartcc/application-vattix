@@ -14,7 +14,7 @@ def connectDb(db_file):
         print(e)
 
 
-def createTable(con, createTableSql):
+def create_table(con, createTableSql):
     """
     Create a table using the createTableSql statement
     :param con: The connection object
@@ -81,12 +81,12 @@ def createBaseTables(con):
 
     # If connection is successful, run the SQL to create the tables.
     try:
-        createTable(con, sqlCreateCountryTable)
-        createTable(con, sqlCreateAirportTable)
-        createTable(con, sqlCreateFirTable)
-        createTable(con, sqlCreateUirTable)
-        createTable(con, sqlCreateIdlTable)
-        createTable(con, sqlCreateGeneralTable)
+        create_table(con, sqlCreateCountryTable)
+        create_table(con, sqlCreateAirportTable)
+        create_table(con, sqlCreateFirTable)
+        create_table(con, sqlCreateUirTable)
+        create_table(con, sqlCreateIdlTable)
+        create_table(con, sqlCreateGeneralTable)
         print("Success")
         return True
     except Error as e:
@@ -94,7 +94,7 @@ def createBaseTables(con):
         return False
 
 
-def insertGeneral(con, general):
+def insert_general(con, general):
     """
 
     :param con:
@@ -102,7 +102,7 @@ def insertGeneral(con, general):
     :return:
     """
 
-    check = checkDuplicate(con, 'general', 'id', 1)
+    check = check_duplicate(con, 'general', 'id', 1)
 
     if check is not True:
         sql = ''' REPLACE INTO general('version', 'lastUpdated', 'vatspyData')
@@ -116,7 +116,7 @@ def insertGeneral(con, general):
     return True, cur.lastrowid
 
 
-def insertCountry(con, country):
+def insert_country(con, country):
     """
     Inserts a country in the database.
     :param con: The connection object.
@@ -124,7 +124,7 @@ def insertCountry(con, country):
     :return: True if successful along with the id of the row inserted.
     """
 
-    check = checkDuplicate(con, 'countries', 'code', country[1])
+    check = check_duplicate(con, 'countries', 'code', country[1])
 
     if check is True:
         sql = '''UPDATE countries SET countries.name={0}, countries.code={1}, countries.type={2} WHERE id={3}'''.format(
@@ -152,7 +152,7 @@ def insertAirport(con, airport):
     :param airport:
     :return:
     """
-    check = checkDuplicate(con, 'airports', 'icao', airport[0])
+    check = check_duplicate(con, 'airports', 'icao', airport[0])
 
     if check is True:
         sql = '''UPDATE airports SET (
@@ -180,7 +180,7 @@ def insertAirport(con, airport):
         return False
 
 
-def checkDuplicate(con, table, value1, value2):
+def check_duplicate(con, table, value1, value2):
     """
     Checks if a row already exists in the table specified
     :param con: The connection object

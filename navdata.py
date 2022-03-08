@@ -1,55 +1,21 @@
 import json
 import os
-from dataclasses import dataclass, field, asdict
-
+import argparse
+from classes import General, Country, Airport, Fir, Uir, Idl
 import tools
 from sqlite3 import Error
 
 
-@dataclass
-class Airport:
-    icao: str = None
-    name: str = None
-    latitude: float = None
-    longitude: float = None
-    iata: str = None
-    fir: str = None
-    is_pseudo: int = 0
-    id: int = field(default=None, compare=False)
-
-    @classmethod
-    def from_dict(cls, d):
-        return Airport(**d)
-
-    def to_dict(self):
-        return asdict(self)
-
-
-@dataclass
-class Country:
-    name: str = None
-    code: str = None
-    type: str = None
-    id: int = field(default=None, compare=False)
-
-    @classmethod
-    def insert_country(cls):
-        print(cls)
-
-
-def loadAiracData(inputFile="VATSpy.json"):
+def loadAiracData(inputFile, verbose):
     """
     Loads data from an input .json file and inserts it into the database.
     :param inputFile:
+    :param verbose: Set to TRUE to get extra debugging output
     :return: True, Number of inserted items, number of errored items, number of skipped items.
     """
 
-    if not os.path.isfile(inputFile):
-        raise FileNotFoundError(
-            "The specified file \"{}\" does not exist. Please specify the correct filename.".format(inputFile))
-
     with open(inputFile) as data_file:
-        dataJson = json.load(data_file)
+        data_json = json.load(data_file)
 
     if os.environ.get('env') is not None:
         environment = os.environ['env']
@@ -73,96 +39,124 @@ def loadAiracData(inputFile="VATSpy.json"):
     else:
         os.abort()
 
-    totalInsert = 0
-    totalFailed = 0
-    totalSkip = 0
+    total_insert = 0
+    total_failed = 0
+    total_skip = 0
 
     # Loop through the VATSpy data JSON file.
-    for x in dataJson:
+    for x in data_json:
         if x == "general":
-            items = list(dataJson['general'].values())
+            items = list(data_json['general'].values())
             general = items[0], items[1], items[2]
 
             try:
-                updateGeneral = tools.insertGeneral(con, general)
-                if updateGeneral:
-                    print("Inserted {}".format(general))
+                update_general = tools.insert_general(con, general)
+                if update_general:
+                    if verbose is True:
+                        print("Inserted {}".format(general))
                 else:
                     print("Updating general info failed!")
             except Error as e:
                 print("Updating general info failed...", e)
 
-            print(dataJson['general']['version'])
+            if verbose is True:
+                print(data_json['general']['version'])
 
         if x == "countries":
-            items = dataJson['countries'].items()
+            items = data_json['countries'].items()
 
-            insertCount = 0
-            skipCount = 0
-            failedCount = 0
+            insert_count = 0
+            skip_count = 0
+            failed_count = 0
 
             for i, y in items:
                 # print("{} : {}".format(y["code"], y["name"]),
                 # "{type}".format(type="({})".format(y["type"]) if y["type"] != "" else "")) # DEBUG
 
-                check = tools.checkDuplicate(con, x, "code", y["code"])
+                check = tools.check_duplicate(con, x, "code", y["code"])
 
                 if check is False:
                     country = Country(y["name"], y["code"], y["type"])
                     try:
-                        createCountry = tools.insertCountry(con, country)
-                        print("{} {}".format(createCountry[2], country))
-                        insertCount += 1
+                        createCountry = tools.insert_country(con, country)
+                        insert_count += 1
+                        if verbose is True:
+                            print("{} {}".format(createCountry[2], country))
                     except Error as e:
                         print("Failed.", e)
-                        failedCount += 1
+                        failed_count += 1
                 else:
-                    # print("{} already exists in the database...".format(y["code"]))
-                    skipCount += 1
+                    if verbose is True:
+                        print("{} already exists in the database...".format(y["code"]))
+                    skip_count += 1
 
-            print("Countries --- Inserted: {} - Failed: {} - Skipped: {}".format(insertCount, failedCount,
-                                                                                 skipCount))
-            totalInsert += insertCount
-            totalFailed += failedCount
-            totalSkip += skipCount
+            print("Countries --- Inserted: {} - Failed: {} - Skipped: {}".format(insert_count, failed_count,
+                                                                                 skip_count))
+            total_insert += insert_count
+            total_failed += failed_count
+            total_skip += skip_count
 
         if x == "airports":
-            items = dataJson['airports'].items()
+            items = data_json['airports'].items()
 
-            insertCount = 0
-            skipCount = 0
-            failedCount = 0
+            insert_count = skip_count = failed_count = 0
 
             for i, y in items:
                 airport = Airport(y["icao"], y["name"], y["latitude"], y["longitude"], y["iata"], y["fir"],
                                   y["isPseudo"])
-                print(airport)
+                if verbose is True:
+                    print(airport)
 
-                check = tools.checkDuplicate(con, x, "icao", y["icao"])
+                check = tools.check_duplicate(con, x, "icao", y["icao"])
                 if check is False:
                     try:
-                        createAirport = tools.insertAirport(con, airport)
-                        if createAirport:
-                            insertCount += 1
+                        create_airport = tools.insertAirport(con, airport)
+                        print(create_airport)
+                        if create_airport:
+                            insert_count += 1
                     except Error as e:
                         print("Failed to insert airport", e)
-                        failedCount += 1
+                        failed_count += 1
                 else:
-                    skipCount += 1
+                    skip_count += 1
 
-            print("Airports --- Inserted: {} - Failed: {} - Skipped: {}".format(insertCount, failedCount,
-                                                                                skipCount))
-            totalInsert += insertCount
-            totalFailed += failedCount
-            totalSkip += skipCount
+            print("Airports --- Inserted: {} - Failed: {} - Skipped: {}".format(insert_count, failed_count,
+                                                                                skip_count))
+            total_insert += insert_count
+            total_failed += failed_count
+            total_skip += skip_count
+
+        if x == "firs":
+
+
+            pass
+
+        if x == "uirs":
+            pass
+
+        if x == "idl":
+            pass
+
 
     # Outside loop
     print("--------------")
-    print("Total --- Inserted: {} - Failed: {} - Skipped: {}".format(totalInsert, totalFailed,
-                                                                     totalSkip))
+    print("Total --- Inserted: {} - Failed: {} - Skipped: {}".format(total_insert, total_failed,
+                                                                     total_skip))
 
-    # print(dataJson["general"])  # FIXME Debugging only
+    if verbose is True:
+        print(data_json["general"])
 
 
 if __name__ == '__main__':
-    loadAiracData("VATSpy.json")
+    parser = argparse.ArgumentParser()
+
+    # -f FILE
+    parser.add_argument("-f", "--filename", help="The path to the input file", default="VATSpy.json")
+    parser.add_argument("-v", "--verbose", help="(Optional) Add verbose debugging output",
+                        default=False, action='store_true')
+    args = parser.parse_args()
+
+    if not args.filename:
+        print("You must specify a filename with -f. Use --help for more info.")
+
+    loadAiracData(args.filename, args.verbose)

@@ -9,10 +9,11 @@ def getVatsimStatus():
 
     return statusJson["data"]
 
-def getVatsimData():
 
+def getVatsimData():
     # To avoid abusing the data servers, we want to first check the cached data if it is out of date.
     # Open the cached data file - FIXME Replace with database instead of local file
+    global status
     try:
         with open('vatsim_live_data.json') as data_file:
             dataJson = json.load(data_file)
@@ -26,14 +27,14 @@ def getVatsimData():
     # Get the current time in UTC
     time_now = datetime.now(pytz.utc)
     time_stamp = time_now.strftime("%Y%m%d%H%M%S")
-    print("TIMESTAMP:" + time_stamp) # FIXME Debug only
+    print("TIMESTAMP:" + time_stamp)  # FIXME Debug only
 
     # Check the cached data when it was last updated
     try:
         dataLastUpdate = dataJson["general"]["update"]
     except ValueError as err:
         result = err
-    print("CURRENT DATA TIME:" + dataLastUpdate) # FIXME Debug Only
+    print("CURRENT DATA TIME:" + dataLastUpdate)  # FIXME Debug Only
 
     # Compare the difference between the cached data and local time
     dataTimeDifference = int(time_stamp) - int(dataLastUpdate)
@@ -61,5 +62,3 @@ def getVatsimData():
         status = "updated"
 
     return dataJson, status
-
-
