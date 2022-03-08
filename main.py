@@ -1,9 +1,10 @@
+import argparse
 import os.path
 import db_init
 import calc_functions
 from math import acos, sin, cos
 
-from vatsim_data import getVatsimData, getVatsimStatus
+from vatsim_data import get_vatsim_data, get_vatsim_status
 
 if __name__ == '__main__':
 
@@ -19,15 +20,23 @@ if __name__ == '__main__':
     else:
         pass
 
-    statusJson = getVatsimStatus()
+    statusJson = get_vatsim_status()
     data = statusJson["v3"].pop()
 
 
-    data, status = getVatsimData()
+    parser = argparse.ArgumentParser()
+
+    # Add ability for better debugging with argparser
+    parser.add_argument("-v", "--verbose", help="(Optional) Add verbose debugging output",
+                        default=False, action='store_true')
+    args = parser.parse_args()
+
+    live_data, status = get_vatsim_data(args.verbose)
+
     print("Data Status:" + status)
 
-    pilot1 = data["pilots"][0]
-    pilot2 = data["pilots"][1]
+    pilot1 = live_data["pilots"][0]
+    pilot2 = live_data["pilots"][1]
 
     d = calc_functions.distanceBetweenCoordinates(pilot1["latitude"], pilot1["longitude"],
                                                   pilot2["latitude"],pilot2["longitude"])

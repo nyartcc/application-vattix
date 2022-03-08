@@ -3,23 +3,23 @@ from datetime import date, datetime
 from urllib.request import urlopen
 
 
-def getVatsimStatus():
+def get_vatsim_status():
     statusUrl = urlopen('https://status.vatsim.net/status.json')
     statusJson = json.loads(statusUrl.read())
 
     return statusJson["data"]
 
 
-def getVatsimData():
+def get_vatsim_data(verbose):
     # To avoid abusing the data servers, we want to first check the cached data if it is out of date.
     # Open the cached data file - FIXME Replace with database instead of local file
     global status
-    try:
+    try:  # FIXME THIS ENTIRE THING IS GARBAGE
         with open('vatsim_live_data.json') as data_file:
-            dataJson = json.load(data_file)
+            data_json = json.load(data_file)
             status = "cached"
     except:
-        dataJson = {
+        data_json = {
             "general": {
                 "update": "0"
             }}
@@ -27,38 +27,42 @@ def getVatsimData():
     # Get the current time in UTC
     time_now = datetime.now(pytz.utc)
     time_stamp = time_now.strftime("%Y%m%d%H%M%S")
-    print("TIMESTAMP:" + time_stamp)  # FIXME Debug only
+    if verbose is True:
+        print("TIMESTAMP:" + time_stamp)  # FIXME Debug only
 
     # Check the cached data when it was last updated
     try:
-        dataLastUpdate = dataJson["general"]["update"]
+        data_last_update = data_json["general"]["update"]
     except ValueError as err:
         result = err
-    print("CURRENT DATA TIME:" + dataLastUpdate)  # FIXME Debug Only
+    if verbose is True:
+        print("CURRENT DATA TIME:" + data_last_update)  # FIXME Debug Only
 
     # Compare the difference between the cached data and local time
-    dataTimeDifference = int(time_stamp) - int(dataLastUpdate)
-    print("Current diff: " + str(dataTimeDifference))
+    data_time_difference = int(time_stamp) - int(data_last_update)
+    if verbose is True:
+        print("Current diff: " + str(data_time_difference))
 
     # The data is stale - it has been more than 90 seconds since the last update
-    if dataTimeDifference > 90:
+    if data_time_difference > 90:
 
         print("Getting new data from VATSIM...")
-        vatsimStatus = getVatsimStatus()
-        dataUrl = vatsimStatus["v3"].pop()
+        vatsim_status = get_vatsim_status()
+        dataUrl = vatsim_status["v3"].pop()
         dataUrl = urlopen(dataUrl)
-        dataJson = json.loads(dataUrl.read())
+        data_json = json.loads(dataUrl.read())
 
-        newDataUpdateTime = dataJson["general"]["update"]
-        print("New update time:" + newDataUpdateTime)
+        new_data_update_time = data_json["general"]["update"]
+        if verbose is True:
+            print("New update time:" + new_data_update_time)
 
-        if dataLastUpdate != newDataUpdateTime:
+        if data_last_update != new_data_update_time:
             # Cache the data locally
             with open('vatsim_live_data.json', 'w') as outfile:
-                json.dump(dataJson, outfile)
+                json.dump(data_json, outfile)
         else:
             print("Data is up to date.")
 
         status = "updated"
 
-    return dataJson, status
+    return data_json, status
