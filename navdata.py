@@ -150,7 +150,7 @@ def load_airac_data(inputFile, verbose, skip):
                         print("Skipped FIR {}".format(fir.icao))
 
             # When done with this category, print a summary of what has been done
-            print("Airports --- Inserted: {} - Failed: {} - Skipped: {}".format(insert_count, failed_count,
+            print("FIRs --- Inserted: {} - Failed: {} - Skipped: {}".format(insert_count, failed_count,
                                                                                 skip_count))
             # Add to the total counters of actions
             total_insert += insert_count
@@ -158,10 +158,62 @@ def load_airac_data(inputFile, verbose, skip):
             total_skip += skip_count
 
         if x == "uirs":
-            pass
+            for i, y in items:
+                uir = Uir(y["prefix"], y["name"], y["coverageFirs"])
+                if verbose:
+                    print(uir)
+
+                check = tools.check_duplicate(con, x, "name", uir.name)
+                if check is False:
+                    try:
+                        create_uir = tools.insert_uir(con, uir)
+                        if verbose:
+                            print(create_uir)
+                        if create_uir:
+                            insert_count += 1
+                    except Error as e:
+                        print("Failed to create UIR", e)
+                        failed_count += 1
+                else:
+                    skip_count += 1
+                    if verbose:
+                        print("Skipped UIR {}".format(uir.name))
+
+            # When done with this category, print a summary of what has been done
+            print("UIRs --- Inserted: {} - Failed: {} - Skipped: {}".format(insert_count, failed_count,
+                                                                                skip_count))
+            # Add to the total counters of actions
+            total_insert += insert_count
+            total_failed += failed_count
+            total_skip += skip_count
 
         if x == "idl":
-            pass
+
+            drop_idl = tools.delete_idl(con)
+            if drop_idl:
+                print("Successfully dropped previous IDL")
+
+                for i, y in items:
+                    idl = Idl(y["cord1"], y["cord2"])
+                    if verbose:
+                        print(idl)
+
+                    try:
+                        create_idl = tools.insert_idl(con, idl)
+                        if verbose:
+                            print(create_idl)
+                        if create_idl:
+                            insert_count += 1
+                    except Error as e:
+                        print("Failed to create IDL", e)
+                        failed_count += 1
+
+            # When done with this category, print a summary of what has been done
+            print("IDL --- Inserted: {} - Failed: {}".format(insert_count, failed_count))
+            # Add to the total counters of actions
+            total_insert += insert_count
+            total_failed += failed_count
+
 
     # Outside loop
     print("--------------")

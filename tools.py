@@ -133,7 +133,7 @@ def insert_country(con, country):
 
     if check is True:
         sql = '''UPDATE countries SET countries.name={0}, countries.code={1}, countries.type={2} WHERE id={3}'''.format(
-                    country.name, country.code, country.type, check[1])
+            country.name, country.code, country.type, check[1])
         action = "Updated"
     else:
         sql = ''' REPLACE INTO countries('name', 'code', 'type')
@@ -221,6 +221,73 @@ def insert_fir(con, fir):
         return True, cur.lastrowid, action
     except Error as e:
         print("Failed to {} thing {}:".format(action, fir.icao), e)
+        return False
+
+
+def insert_uir(con, uir):
+    """
+
+    :param con:
+    :param uir:
+    :return:
+    """
+    check = check_duplicate(con, uir_table, "name", uir.name)
+
+    if check is True:
+        sql = '''UPDATE {0} SET (
+                {0}.prefix={1}
+                {0}.prefix={2}
+                {0}.prefix={3}
+        ) WHERE id={4}'''.format(
+            uir_table, uir.prefix, uir.name, uir.coverage_firs, check[1])
+        action = "update"
+    else:
+        sql = ''' REPLACE INTO {0} (prefix, name, coveragefirs)
+                VALUES('{1}', '{2}', '{3}')'''.format(
+            uir_table, uir.prefix, uir.name, uir.coverage_firs)
+        action = "insert"
+
+    try:
+        cur = con.cursor()
+        cur.execute(sql)
+        con.commit()
+        return True, cur.lastrowid, action
+    except Error as e:
+        print("Failed to {} UIR {}:".format(action, uir.name), e)
+        return False
+
+
+def delete_idl(con):
+    drop_previous_idl = ''' DELETE FROM {} WHERE id > 0'''.format(idl_table)
+    try:
+        cur = con.cursor()
+        cur.execute(drop_previous_idl)
+        con.commit()
+
+        return True
+    except Error as e:
+        print("Failed to delete IDL", e)
+        return False
+
+
+def insert_idl(con, idl):
+    """
+    Insert the International Date Line (IDL) in the database. Make sure to run delete_idl() first!
+    :param con: The connection object.
+    :param idl: The IDL object containing the two coordinates.
+    :return: True / Fail. If true, return the last inserted row id, along with the action.
+    """
+    sql = ''' INSERT INTO {0} (cord1, cord2) VALUES ({1}, {2})'''.format(idl_table, idl.cord1, idl.cord2)
+    action = "insert"
+
+    try:
+        cur = con.cursor()
+        cur.execute(sql)
+        con.commit()
+
+        return True, cur.lastrowid, action
+    except Error as e:
+        print("Failed to modify IDL...", e)
         return False
 
 
