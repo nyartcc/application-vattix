@@ -2,7 +2,7 @@ import json
 import os
 import argparse
 from navdata.classes import Country, Airport, Fir, Uir, Idl
-import tools
+import navdata.tools as tools
 from sqlite3 import Error
 
 
@@ -223,12 +223,14 @@ def load_airac_data(inputFile, verbose, skip):
     if verbose is True:
         print(data_json["general"])
 
+    return True
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
 
     # -f FILE
-    parser.add_argument("-f", "--filename", help="The path to the input file", default="VATSpy.json")
+    parser.add_argument("-f", "--filename", help="The path to the input file", default="navdata/VATSpy.json")
     parser.add_argument("-s", "--skip", help="(Optional) Pass in a JSON object to be skipped to save debug time")
     parser.add_argument("-v", "--verbose", help="(Optional) Add verbose debugging output",
                         default=False, action='store_true')
