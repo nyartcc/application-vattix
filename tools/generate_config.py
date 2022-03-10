@@ -5,7 +5,7 @@ config_file = configparser.ConfigParser()
 
 # Basic Section
 config_file.add_section("GeneralSettings")
-filename = "configuration.ini"
+filename = "../configuration.ini"
 config_file.set("GeneralSettings", "filename", filename)
 
 # Database

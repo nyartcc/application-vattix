@@ -2,12 +2,11 @@ import argparse
 import os.path
 from sqlite3 import Error
 
-import db_init
-import calc_functions
+from tools import db_init, calc_functions
 import navdata.tools
 from navdata.navdata import load_airac_data
 
-from vatsim_data import get_vatsim_data, get_vatsim_status
+from vatsim_data.vatsim_data import get_vatsim_data, get_vatsim_status
 
 if __name__ == '__main__':
 
@@ -46,7 +45,7 @@ if __name__ == '__main__':
                 if create_tables is True:
                     print("Success! Tables created successfully! 🎉 ")
                 else:
-                    print("Failed to create base tables.")
+                    print("❌ ERROR! Failed to create base tables.")
             except Error as e:
                 print(e)
                 os.abort()
@@ -55,9 +54,9 @@ if __name__ == '__main__':
             if args.navdata is not None:
                 load_data = load_airac_data(args.navdata, args.verbose, args.skip)
                 if load_data is True:
-                    print("Success! Navdata loaded.")
+                    print("🎉 Success! Navdata loaded.")
                 else:
-                    print("Failed to load navdata...", load_data[1])
+                    print("❌ ERROR! Failed to load navdata...", load_data[1])
             else:
                 print("❌ ERROR! We're required to load base navdata. Please specify the location of the navdata JSON "
                       "file using the -n flag. Need help? Use --help!")

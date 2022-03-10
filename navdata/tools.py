@@ -1,6 +1,6 @@
 import sqlite3
 from sqlite3 import Error
-import helper
+from tools import helper
 
 config = helper.read_config()
 country_table = config['DatabaseSettings']['countries_table']

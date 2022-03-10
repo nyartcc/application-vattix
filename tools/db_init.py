@@ -5,7 +5,7 @@ from sqlite3 import Error
 
 def sql_connection():
     try:
-        db_file = 'dev.db'
+        db_file = '../dev.db'
         con = sqlite3.connect(db_file)
 
         return con, db_file

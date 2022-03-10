@@ -15,7 +15,7 @@ def get_vatsim_data(verbose):
     # Open the cached data file - FIXME Replace with database instead of local file
     global status, data_last_update
     try:  # FIXME THIS ENTIRE THING IS GARBAGE
-        with open('vatsim_live_data.json') as data_file:
+        with open('../vatsim_live_data.json') as data_file:
             data_json = json.load(data_file)
             status = "cached"
     except:
@@ -58,7 +58,7 @@ def get_vatsim_data(verbose):
 
         if data_last_update != new_data_update_time:
             # Cache the data locally
-            with open('vatsim_live_data.json', 'w') as outfile:
+            with open('../vatsim_live_data.json', 'w') as outfile:
                 json.dump(data_json, outfile)
         else:
             print("Data is up to date.")
