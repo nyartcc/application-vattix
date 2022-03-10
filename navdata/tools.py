@@ -38,8 +38,9 @@ def create_table(con, create_table_sql):
 
 def create_base_tables(con):
     """
-    :param con:
-    :return:
+    Creates the initial base tables for the database. Get the table names from the config file.
+    :param con: The connection object.
+    :return: True / False. If false, also return the error message.
     """
     # Queries for creating tables if they do not exist.
     sql_create_country_table = ''' CREATE TABLE IF NOT EXISTS {0} (
@@ -92,16 +93,14 @@ def create_base_tables(con):
         create_table(con, sql_create_uir_table)
         create_table(con, sql_create_idl_table)
         create_table(con, sql_create_general_table)
-        print("Success")
         return True
     except Error as e:
-        print("Something failed:", e)
-        return False
+        return False, e
 
 
 def insert_general(con, general):
     """
-    Insert or update the general settings
+    Insert or update the general settings in the database.
     :param con: The connection object.
     :param general: The object with the information about the general information that one wish to insert in
                     the database.
@@ -115,10 +114,13 @@ def insert_general(con, general):
     else:
         sql = ''' UPDATE {} SET version=?, lastupdated=?, vatspydata=? WHERE id=1'''.format(general_table)
 
-    cur = con.cursor()
-    cur.execute(sql, general)
-    con.commit()
-    return True, cur.lastrowid
+    try:
+        cur = con.cursor()
+        cur.execute(sql, general)
+        con.commit()
+        return True, cur.lastrowid
+    except Error as e:
+        return False, e
 
 
 def insert_country(con, country):

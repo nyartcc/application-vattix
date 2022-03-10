@@ -3,7 +3,7 @@
 
 # Output from the scripts. No need to store it
 vatsim_live_data.json
-json_data.json
+navdata/json_data.json
 
 # Local Dev stuff
 dev.db

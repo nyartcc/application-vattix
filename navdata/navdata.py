@@ -1,7 +1,7 @@
 import json
 import os
 import argparse
-from classes import General, Country, Airport, Fir, Uir, Idl
+from navdata.classes import Country, Airport, Fir, Uir, Idl
 import tools
 from sqlite3 import Error
 
