@@ -17,7 +17,11 @@ def sql_connection():
 def sql_table(con):
     cursorObj = con.cursor()
 
-    cursorObj.execute(
+    try:
+        cursorObj.execute(
         "CREATE TABLE connections (id integer PRIMARY KEY, cid integer, callsign text, latitude float, longitude float, altitude float, groundspeed float, transponder text, heading float, flight_plan text, logon_time text, last_updated text)")
+        con.commit()
+        return True
+    except Error as e:
+        return False, e
 
-    con.commit()
