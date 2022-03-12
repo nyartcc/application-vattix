@@ -9,10 +9,10 @@ def distanceBetweenCoordinates(lat1, lon1, lat2, lon2, debug, verbose):
         lon2 = 10.752245
 
     PI = 3.141592
-    lat1 = lat1 * (PI / 180)
-    lat2 = lat2 * (PI / 180)
-    lon1 = lon1 * (PI / 180)
-    lon2 = lon2 * (PI / 180)
+    lat1 = cal_radian(lat1)
+    lat2 = cal_radian(lat2)
+    lon1 = cal_radian(lon1)
+    lon2 = cal_radian(lon2)
 
     if debug or verbose is True:
         print(debug, lat1, lon1, lat2, lon2)
@@ -30,3 +30,9 @@ def distanceBetweenCoordinates(lat1, lon1, lat2, lon2, debug, verbose):
     return d
 
     # D = 3963 * acos( sin(lat1) * sin(lat2) + cos(lat1) * cos(lat2) * cos(lon2 – lon1) );
+
+
+def cal_radian(coordinate):
+    PI = 3.141592
+    x = coordinate * (PI / 180)
+    return x
