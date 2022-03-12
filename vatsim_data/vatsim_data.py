@@ -51,6 +51,7 @@ def get_vatsim_data(verbose):
         dataUrl = vatsim_status["v3"].pop()
         dataUrl = urlopen(dataUrl)
         data_json = json.loads(dataUrl.read())
+        print("Data loaded OK...")
 
         new_data_update_time = data_json["general"]["update"]
         if verbose is True:
