@@ -28,6 +28,7 @@ class Pilot:
     def to_dict(self):
         return asdict(self)
 
+
 @dataclass()
 class Flightplan:
     flight_rules: str
@@ -50,4 +51,3 @@ class Flightplan:
     @classmethod
     def from_dict(cls, d):
         return Flightplan(**d)
-
