@@ -27,3 +27,27 @@ class Pilot:
 
     def to_dict(self):
         return asdict(self)
+
+@dataclass()
+class Flightplan:
+    flight_rules: str
+    aircraft: str
+    aircraft_faa: str
+    aircraft_short: str
+    departure: str
+    arrival: str
+    alternate: str
+    cruise_tas: str
+    altitude: str
+    deptime: str
+    enroute_time: str
+    fuel_time: str
+    remarks: str
+    route: str
+    revision_id: int
+    assigned_transponder: str
+
+    @classmethod
+    def from_dict(cls, d):
+        return Flightplan(**d)
+
