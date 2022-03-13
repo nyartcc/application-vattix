@@ -2,10 +2,12 @@ import argparse
 import os.path
 from sqlite3 import Error
 
+from navdata.classes import Airport
 from tools import db_init, calc_functions
 import navdata.tools
 from navdata.navdata import load_airac_data
-from classes.vatsim_pilot import Pilot
+from classes.vatsim_pilot import Pilot, Flightplan
+import navdata
 
 from vatsim_data.vatsim_data import get_vatsim_data, get_vatsim_status
 
@@ -84,6 +86,8 @@ if __name__ == '__main__':
                         print("Success! Navdata loaded.")
                 else:
                     print("❌ ERROR! Failed to load navdata...", load_data[1])
+        con = db_init.connect_db("dev.db")
+
     print("Data loaded OK.")
 
     statusJson = get_vatsim_status()
@@ -98,22 +102,71 @@ if __name__ == '__main__':
 
     pilot1 = live_data["pilots"][0]
     pilot2 = live_data["pilots"][1]
+    i = 0
 
-    d = calc_functions.distanceBetweenCoordinates(pilot1["latitude"], pilot1["longitude"],
-                                                  pilot2["latitude"], pilot2["longitude"], False, True)
+    for i, x in enumerate(live_data["pilots"]):
+        pilot = Pilot.from_dict(x)
 
-    # Todo: Calculate distance a pilot has travelled since the last update.
-    # Need to check their current position against the last position.
-    # Also need to check distance from origin and destination.
+        if debug:
+            # print(pilot)
+            pass
 
-    if debug:
-        debug = pilot1["latitude"], pilot1["longitude"], pilot2["latitude"], pilot2["longitude"]
+        if pilot.flight_plan is not None:
+            flight_plan = Flightplan.from_dict(pilot.flight_plan)
 
-    s = "The distance between {} and {} is {} nautical miles".format(pilot1["callsign"], pilot2["callsign"], round(d))
+            pilot_dep_airport_coords = Airport.info(con, flight_plan.departure, "coordinates")
+            pilot_arr_airport_coords = Airport.info(con, flight_plan.arrival, "coordinates")
 
-    print(s)
+            if pilot_dep_airport_coords and pilot_arr_airport_coords is not False:
 
-    print(pilot1)
+                dist_departure = round(calc_functions.distanceBetweenCoordinates(pilot_dep_airport_coords[0],
+                                                                                 pilot_dep_airport_coords[1],
+                                                                                 pilot.latitude,
+                                                                                 pilot.longitude,
+                                                                                 False, False))
+                dist_arrival = round(calc_functions.distanceBetweenCoordinates(pilot_arr_airport_coords[0],
+                                                                               pilot_arr_airport_coords[1],
+                                                                               pilot.latitude,
+                                                                               pilot.longitude,
+                                                                               False, False))
 
-    thing = Pilot.from_dict(pilot1)
-    print(thing.callsign)
+                if dist_arrival < 10:
+                    print(pilot.callsign, ": 🛬 The dude probably arrived at", flight_plan.arrival, "Distance from "
+                                                                                                    "arrival -",
+                          dist_arrival)
+                elif dist_departure < 10:
+                    print(pilot.callsign, ": 🛫 Probably not departed from", flight_plan.departure, "yet... Distance "
+                                                                                                    "from departure "
+                                                                                                    "-",
+                          dist_departure)
+                else:
+                    print(pilot.callsign, ": 🛩 In flight. Distance from arrival -", dist_arrival)
+            else:
+                if pilot_dep_airport_coords is False:
+                    print(pilot.callsign, ": ⚠️ Departure airport not found in navdata. Unable to continue.")
+                elif pilot_arr_airport_coords is False:
+                    print(pilot.callsign, ": ⚠️ Arrival airport not found in navdata. Unable to continue.")
+
+            # Todo: Calculate distance a pilot has travelled since the last update.
+            # Need to check their current position against the last position.
+            # Also need to check distance from origin and destination.
+
+            # if debug:
+            #    debug = pilot1["latitude"], pilot1["longitude"], pilot2["latitude"], pilot2["longitude"]
+
+            # s = "The distance between {} and {} is {} nautical miles".format(pilot1["callsign"], pilot2["callsign"], round(d))
+
+            # print(s)
+
+            if debug:
+                print("i is:", i)
+            if i == 10:
+                break
+            else:
+                i += 1
+
+        else:
+            print(pilot.callsign, ": ❌ This pilot is a dumbass and flying without a flightplan. So... We're skipping "
+                                  "him.")
+
+
