@@ -25,3 +25,12 @@ def sql_table(con):
     except Error as e:
         return False, e
 
+
+def connect_db(db_file):
+    con = None
+    try:
+        con = sqlite3.connect(db_file)
+        return con
+    except Error as e:
+        print(e)
+
