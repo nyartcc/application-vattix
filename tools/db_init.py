@@ -19,7 +19,15 @@ def sql_table(con):
 
     try:
         cursorObj.execute(
-        "CREATE TABLE connections (id integer PRIMARY KEY, cid integer, callsign text, latitude float, longitude float, altitude float, groundspeed float, transponder text, heading float, flight_plan text, logon_time text, last_updated text)")
+        "CREATE TABLE connections (id integer PRIMARY KEY, cid integer, callsign text, latitude float, "
+        "longitude float, altitude float, groundspeed float, transponder text, heading float, flight_plan text, "
+        "logon_time text, last_updated text)")
+
+        cursorObj.execute(
+            "CREATE TABLE flights (id integer PRIMARY KEY, connection_id int, update_id int, cid int, latitude float, "
+            "longitude float, altitude float, groundspeed float, transponder int, heading int, flight_plan text, "
+            "departure_time text, arrival_time int, update_time int, departed int, arrived int)")
+
         con.commit()
         return True
     except Error as e:
