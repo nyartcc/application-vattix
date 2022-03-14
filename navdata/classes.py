@@ -1,4 +1,5 @@
 from dataclasses import dataclass, field, asdict
+from sqlite3 import Error
 
 
 @dataclass
@@ -19,7 +20,6 @@ class Airport:
     fir: str = None
     is_pseudo: int = 0
     id: int = field(default=None, compare=False)
-
 
     @classmethod
     def from_dict(cls, d):
@@ -90,3 +90,50 @@ class Idl:
     cord1: str = None
     cord2: str = None
     id: int = field(default=None, compare=False)
+
+
+@dataclass
+class Flight:
+    connection_id: int
+    update_id: int
+    cid: int
+    latitude: float
+    longitude: float
+    altitude: float
+    groundspeed: float
+    transponder: int
+    heading: int
+    flight_plan: dict
+    departure_time: float
+    arrival_time: float
+    update_time: float
+    departed: bool = field(default=False, compare=False)
+    arrived: bool = field(default=False, compare=False)
+
+    @classmethod
+    def from_dict(cls, d):
+        return Airport(**d)
+
+    def to_dict(self):
+        return asdict(self)
+
+    def insert(self, con, flight):
+        """
+
+        :param con:
+        :return:
+        """
+        print(flight)
+
+        sql = '''INSERT INTO flights (connection_id, update_id, cid, latitude, longitude, altitude, groundspeed, 
+        transponder, heading, flight_plan, departure_time, arrival_time, update_time, departed, arrived) 
+        VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)'''
+
+        try:
+            cur = con.cursor()
+            cur.execute(sql, flight.to_dict())
+            con.commit()
+            return True, cur.lastrowid
+        except Error as e:
+            print(e)
+            return False, e
