@@ -1,4 +1,4 @@
-![](.github/logo.png)
+![](.github/github_banner.png)
 # VATTIX - A VATSIM Statistic Service
 A service to provide an open-source statistics service.
 
