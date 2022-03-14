@@ -1,8 +1,10 @@
 import argparse
 import os.path
+import random
+import time
 from sqlite3 import Error
 
-from navdata.classes import Airport
+from navdata.classes import Airport, Flight
 from tools import db_init, calc_functions
 import navdata.tools
 from navdata.navdata import load_airac_data
@@ -118,6 +120,8 @@ if __name__ == '__main__':
             pilot_arr_airport_coords = Airport.info(con, flight_plan.arrival, "coordinates")
 
             if pilot_dep_airport_coords and pilot_arr_airport_coords is not False:
+                if debug:
+                    print("🐛 Debug - pilot_arr/dep_airport_coords", pilot_arr_airport_coords, pilot_arr_airport_coords)
 
                 dist_departure = round(calc_functions.distanceBetweenCoordinates(pilot_dep_airport_coords[0],
                                                                                  pilot_dep_airport_coords[1],
@@ -129,18 +133,32 @@ if __name__ == '__main__':
                                                                                pilot.latitude,
                                                                                pilot.longitude,
                                                                                False, False))
+                if debug:
+                    print("🐛 Debug - dist_departure, dist_arrival:", dist_departure, dist_arrival)
 
-                if dist_arrival < 10:
-                    print(pilot.callsign, ": 🛬 The dude probably arrived at", flight_plan.arrival, "Distance from "
-                                                                                                    "arrival -",
+                if dist_arrival < 10 and pilot.groundspeed < 50:
+                    print(pilot.callsign, ": 🛬 Probably arrived at", flight_plan.arrival, "Distance from "
+                                                                                           "arrival -",
                           dist_arrival)
-                elif dist_departure < 10:
+
+                    # Insert into flights table
+                    # id, connection_id, update_id, cid, latitude, longitude, altitude, groundspeed, transponder, heading, flight_plan, departed, departure_time, arrived, arrival_time, update_time
+
+                    stuff = Flight(i, i, pilot.cid, pilot.latitude, pilot.longitude, pilot.altitude,
+                                   pilot.groundspeed, pilot.transponder, pilot.heading, pilot.flight_plan,
+                                   1, 2, time.time(), False, False)
+
+                    thing = Flight.insert(stuff, con, stuff)
+
+
+                elif dist_departure < 10 and pilot.groundspeed < 50:
                     print(pilot.callsign, ": 🛫 Probably not departed from", flight_plan.departure, "yet... Distance "
                                                                                                     "from departure "
                                                                                                     "-",
                           dist_departure)
-                else:
-                    print(pilot.callsign, ": 🛩 In flight. Distance from arrival -", dist_arrival)
+                elif pilot.groundspeed >= 50:
+                    print(pilot.callsign, ": 🛩 In flight. Distance from arrival -", dist_arrival, "Altitude:",
+                          pilot.altitude)
             else:
                 if pilot_dep_airport_coords is False:
                     print(pilot.callsign, ": ⚠️ Departure airport not found in navdata. Unable to continue.")
@@ -150,13 +168,6 @@ if __name__ == '__main__':
             # Todo: Calculate distance a pilot has travelled since the last update.
             # Need to check their current position against the last position.
             # Also need to check distance from origin and destination.
-
-            # if debug:
-            #    debug = pilot1["latitude"], pilot1["longitude"], pilot2["latitude"], pilot2["longitude"]
-
-            # s = "The distance between {} and {} is {} nautical miles".format(pilot1["callsign"], pilot2["callsign"], round(d))
-
-            # print(s)
 
             if debug:
                 print("i is:", i)
@@ -168,5 +179,3 @@ if __name__ == '__main__':
         else:
             print(pilot.callsign, ": ❌ This pilot is a dumbass and flying without a flightplan. So... We're skipping "
                                   "him.")
-
-
