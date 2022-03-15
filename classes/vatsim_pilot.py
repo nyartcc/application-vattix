@@ -10,6 +10,7 @@ class Pilot:
     pilot_rating: int
     latitude: float
     longitude: float
+    position: dict
     altitude: int
     groundspeed: int
     transponder: int
