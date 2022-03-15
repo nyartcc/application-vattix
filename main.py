@@ -13,25 +13,28 @@ import navdata
 
 from vatsim_data.vatsim_data import get_vatsim_data, get_vatsim_status
 
+global debug
+global verbose
+
+# Get commandline arguments that the user may input to customize the application.
+parser = argparse.ArgumentParser()
+
+# Specify the arguments available to the user
+parser.add_argument("-n", "--navdata", help="The path to the navdata input file")
+parser.add_argument("-s", "--skip", help="(Optional) Pass in a JSON object in the navdata JSON file to be "
+                                         "skipped to save debug time")
+parser.add_argument("-v", "--verbose", help="(Optional) Add verbose debugging output",
+                    default=False, action='store_true')
+parser.add_argument("-d", "--debug", help="(Optional) Set debug mode; sets certain parameters to default values "
+                                          "and ignores live VATSIM data.", default=False, action='store_true')
+
+# Parse all the available
+args = parser.parse_args()
+
+debug = args.debug
+verbose = args.verbose
+
 if __name__ == '__main__':
-
-    # Get commandline arguments that the user may input to customize the application.
-    parser = argparse.ArgumentParser()
-
-    # Specify the arguments available to the user
-    parser.add_argument("-n", "--navdata", help="The path to the navdata input file")
-    parser.add_argument("-s", "--skip", help="(Optional) Pass in a JSON object in the navdata JSON file to be "
-                                             "skipped to save debug time")
-    parser.add_argument("-v", "--verbose", help="(Optional) Add verbose debugging output",
-                        default=False, action='store_true')
-    parser.add_argument("-d", "--debug", help="(Optional) Set debug mode; sets certain parameters to default values "
-                                              "and ignores live VATSIM data.", default=False, action='store_true')
-
-    # Parse all the available
-    args = parser.parse_args()
-
-    verbose = args.verbose
-    debug = args.debug
 
     # If the user specifies to load navdata (-n), run it!
     # FIXME Implement: Check if navadata already exist, if not return error requiring the user to input it.
@@ -107,12 +110,18 @@ if __name__ == '__main__':
     i = 0
 
     for i, x in enumerate(live_data["pilots"]):
+        # Create a single position value based on the lat, lon of the pilots position for easy reference.
+        # Append it to the existing dict.
+        x["position"] = {"lat": x["latitude"], "lon": x["longitude"]}
+
+        print()
+        # Turn the dictionary into an object
         pilot = Pilot.from_dict(x)
 
         if debug:
-            # print(pilot)
-            pass
+            print("🐛 Debug - pilot:", pilot)
 
+        # FIXME, for now, only deal with pilots that have a flightplan
         if pilot.flight_plan is not None:
             flight_plan = Flightplan.from_dict(pilot.flight_plan)
 
@@ -121,41 +130,30 @@ if __name__ == '__main__':
 
             if pilot_dep_airport_coords and pilot_arr_airport_coords is not False:
                 if debug:
-                    print("🐛 Debug - pilot_arr/dep_airport_coords", pilot_arr_airport_coords, pilot_arr_airport_coords)
+                    print("🐛 Debug - pilot_arr/dep_airport_coords", pilot_arr_airport_coords, pilot_dep_airport_coords)
 
-                dist_departure = round(calc_functions.distanceBetweenCoordinates(pilot_dep_airport_coords[0],
-                                                                                 pilot_dep_airport_coords[1],
-                                                                                 pilot.latitude,
-                                                                                 pilot.longitude,
-                                                                                 False, False))
-                dist_arrival = round(calc_functions.distanceBetweenCoordinates(pilot_arr_airport_coords[0],
-                                                                               pilot_arr_airport_coords[1],
-                                                                               pilot.latitude,
-                                                                               pilot.longitude,
-                                                                               False, False))
-                if debug:
-                    print("🐛 Debug - dist_departure, dist_arrival:", dist_departure, dist_arrival)
+                dist_departure = round(
+                    calc_functions.distance_between_coordninates(pilot_dep_airport_coords, pilot.position))
+                dist_arrival = round(
+                    calc_functions.distance_between_coordninates(pilot_arr_airport_coords, pilot.position))
 
                 if dist_arrival < 10 and pilot.groundspeed < 50:
                     print(pilot.callsign, ": 🛬 Probably arrived at", flight_plan.arrival, "Distance from "
                                                                                            "arrival -",
-                          dist_arrival)
+                                                                                            dist_arrival)
 
-                    # Insert into flights table
-                    # id, connection_id, update_id, cid, latitude, longitude, altitude, groundspeed, transponder, heading, flight_plan, departed, departure_time, arrived, arrival_time, update_time
-
-                    stuff = Flight(i, i, pilot.cid, pilot.latitude, pilot.longitude, pilot.altitude,
-                                   pilot.groundspeed, pilot.transponder, pilot.heading, pilot.flight_plan,
-                                   1, 2, time.time(), False, False)
+                    # FIXME Insert into flights table - Temp variable name
+                    stuff = Flight(i, i, pilot.cid, pilot.latitude, pilot.longitude, pilot.position,
+                                   pilot.altitude, pilot.groundspeed, pilot.transponder, pilot.heading,
+                                   pilot.flight_plan, 1, 2, time.time(), False, False)
 
                     thing = Flight.insert(stuff, con, stuff)
-
 
                 elif dist_departure < 10 and pilot.groundspeed < 50:
                     print(pilot.callsign, ": 🛫 Probably not departed from", flight_plan.departure, "yet... Distance "
                                                                                                     "from departure "
                                                                                                     "-",
-                          dist_departure)
+                                                                                                    dist_departure)
                 elif pilot.groundspeed >= 50:
                     print(pilot.callsign, ": 🛩 In flight. Distance from arrival -", dist_arrival, "Altitude:",
                           pilot.altitude)
@@ -171,10 +169,10 @@ if __name__ == '__main__':
 
             if debug:
                 print("i is:", i)
-            if i == 10:
-                break
-            else:
-                i += 1
+                if i == 10:
+                    break
+                else:
+                    i += 1
 
         else:
             print(pilot.callsign, ": ❌ This pilot is a dumbass and flying without a flightplan. So... We're skipping "
