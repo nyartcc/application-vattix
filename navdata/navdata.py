@@ -4,13 +4,12 @@ import argparse
 from navdata.classes import Country, Airport, Fir, Uir, Idl
 import navdata.tools as tools
 from sqlite3 import Error
+from main import verbose
 
-
-def load_airac_data(inputFile, verbose, skip):
+def load_airac_data(inputFile, skip):
     """
     Loads data from an input .json file and inserts it into the database.
     :param inputFile:
-    :param verbose: Set to TRUE to get extra debugging output
     :return: True, Number of inserted items, number of errored items, number of skipped items.
     """
 
