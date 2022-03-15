@@ -19,9 +19,9 @@ def sql_table(con):
 
     try:
         cursorObj.execute(
-        "CREATE TABLE connections (id integer PRIMARY KEY, cid integer, callsign text, latitude float, "
-        "longitude float, altitude float, groundspeed float, transponder text, heading float, flight_plan text, "
-        "logon_time text, last_updated text)")
+            "CREATE TABLE connections (id integer PRIMARY KEY, cid integer, callsign text, latitude float, "
+            "longitude float, altitude float, groundspeed float, transponder text, heading float, flight_plan text, "
+            "logon_time text, last_updated text)")
 
         cursorObj.execute(
             "CREATE TABLE flights (id integer PRIMARY KEY, connection_id int, update_id int, cid int, latitude float, "
@@ -41,4 +41,3 @@ def connect_db(db_file):
         return con
     except Error as e:
         print(e)
-
