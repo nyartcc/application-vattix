@@ -16,6 +16,7 @@ class Airport:
     name: str = None
     latitude: str = None
     longitude: str = None
+    position: dict = None
     iata: str = None
     fir: str = None
     is_pseudo: int = 0
@@ -42,17 +43,21 @@ class Airport:
         row = cur.fetchone()
 
         if row is not None:
-            airport = Airport(row[1], row[2], row[3], row[4], row[5], row[6], row[7], row[8])
+            airport = Airport(row[1], row[2], row[3], row[4], {"lat": row[3], "lon": row[4]}, row[5], row[6], row[7], row[8])
 
             if info == "coordinates":
-                return [airport.latitude, airport.longitude]
+                return airport.position
             else:
                 print(airport)
 
         else:
             return False
 
-    def cursor(self):
+    def cursor(self) -> object:
+        """
+        Get Pycharm to stop complaining.
+        :return:
+        """
         pass
 
 
@@ -99,6 +104,7 @@ class Flight:
     cid: int
     latitude: float
     longitude: float
+    position: dict
     altitude: float
     groundspeed: float
     transponder: int
@@ -120,6 +126,7 @@ class Flight:
     def insert(self, con, flight):
         """
 
+        :param flight:
         :param con:
         :return:
         """
