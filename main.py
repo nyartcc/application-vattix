@@ -1,17 +1,14 @@
 import argparse
 import os.path
-import random
 import time
 from sqlite3 import Error
 
 from navdata.classes import Airport, Flight
 from tools import db_init, calc_functions
 import navdata.tools
-from navdata.navdata import load_airac_data
 from classes.vatsim_pilot import Pilot, Flightplan
 import navdata
-
-from vatsim_data.vatsim_data import get_vatsim_data, get_vatsim_status
+import vatsim_data.vatsim_data
 
 global debug
 global verbose
@@ -69,7 +66,7 @@ if __name__ == '__main__':
 
             print("Loading navdata...")
             if args.navdata is not None:
-                load_data = load_airac_data(args.navdata, args.verbose, args.skip)
+                load_data = navdata.load_airac_data(args.navdata, args.skip)
                 if load_data is True:
                     print("🎉 Success! Navdata loaded.")
                 else:
@@ -85,7 +82,7 @@ if __name__ == '__main__':
             if verbose:
                 print("Database exists... Continue.")
             if args.navdata is not None:
-                load_data = load_airac_data(args.navdata, args.verbose, args.skip)
+                load_data = navdata.load_airac_data(args.navdata, args.skip)
                 if load_data is True:
                     if verbose:
                         print("Success! Navdata loaded.")
@@ -95,10 +92,10 @@ if __name__ == '__main__':
 
     print("Data loaded OK.")
 
-    statusJson = get_vatsim_status()
+    statusJson = vatsim_data.vatsim_data.get_vatsim_status()
     data = statusJson["v3"].pop()
 
-    live_data, status = get_vatsim_data(args.verbose)
+    live_data, status = vatsim_data.vatsim_data.get_vatsim_data()
 
     if verbose:
         print("Data Status:" + status)
@@ -108,7 +105,6 @@ if __name__ == '__main__':
     pilot1 = live_data["pilots"][0]
     pilot2 = live_data["pilots"][1]
     i = 0
-
     for i, x in enumerate(live_data["pilots"]):
         # Create a single position value based on the lat, lon of the pilots position for easy reference.
         # Append it to the existing dict.
@@ -133,9 +129,9 @@ if __name__ == '__main__':
                     print("🐛 Debug - pilot_arr/dep_airport_coords", pilot_arr_airport_coords, pilot_dep_airport_coords)
 
                 dist_departure = round(
-                    calc_functions.distance_between_coordninates(pilot_dep_airport_coords, pilot.position))
+                    calc_functions.distance_between_coordinates(pilot_dep_airport_coords, pilot.position))
                 dist_arrival = round(
-                    calc_functions.distance_between_coordninates(pilot_arr_airport_coords, pilot.position))
+                    calc_functions.distance_between_coordinates(pilot_arr_airport_coords, pilot.position))
 
                 if dist_arrival < 10 and pilot.groundspeed < 50:
                     print(pilot.callsign, ": 🛬 Probably arrived at", flight_plan.arrival, "Distance from "

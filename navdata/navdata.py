@@ -4,7 +4,9 @@ import argparse
 from navdata.classes import Country, Airport, Fir, Uir, Idl
 import navdata.tools as tools
 from sqlite3 import Error
-from main import verbose
+from main import debug, verbose
+
+
 
 def load_airac_data(inputFile, skip):
     """
@@ -12,6 +14,7 @@ def load_airac_data(inputFile, skip):
     :param inputFile:
     :return: True, Number of inserted items, number of errored items, number of skipped items.
     """
+
 
     with open(inputFile) as data_file:
         data_json = json.load(data_file)
@@ -231,11 +234,9 @@ if __name__ == '__main__':
     # -f FILE
     parser.add_argument("-f", "--filename", help="The path to the input file", default="navdata/VATSpy.json")
     parser.add_argument("-s", "--skip", help="(Optional) Pass in a JSON object to be skipped to save debug time")
-    parser.add_argument("-v", "--verbose", help="(Optional) Add verbose debugging output",
-                        default=False, action='store_true')
     args = parser.parse_args()
 
     if not args.filename:
         print("You must specify a filename with -f. Use --help for more info.")
 
-    load_airac_data(args.filename, args.verbose, args.skip)
+    load_airac_data(args.filename, args.skip)

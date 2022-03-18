@@ -1,9 +1,8 @@
 from math import acos, sin, cos, radians, atan2, sqrt
-
 from main import debug, verbose
 
 
-def distance_between_coordninates(src, dst):
+def distance_between_coordinates(src, dst):
     if debug and verbose is True:
         lat1 = radians(58.964432)
         lat2 = radians(59.913868)
@@ -46,7 +45,10 @@ def distance_points(src, dst):
     dlon = lon2 - lon1
     dlat = lat2 - lat1
     a = (sin(dlat / 2)) ** 2 + cos(lat1) * cos(lat2) * (sin(dlon / 2)) ** 2
+
+    R = 6373.0
+
     c = 2 * atan2(sqrt(a), sqrt(1 - a))
-    # distance = R * c
-    distance = "Fucked"
+    distance = R * c
+
     return distance / 1.852

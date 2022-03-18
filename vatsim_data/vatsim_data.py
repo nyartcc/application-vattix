@@ -2,10 +2,9 @@ import json, pytz
 from datetime import date, datetime
 from urllib.request import urlopen
 
-from main import verbose
-
 
 def get_vatsim_status():
+
     statusUrl = urlopen('https://status.vatsim.net/status.json')
     statusJson = json.loads(statusUrl.read())
 
@@ -13,6 +12,8 @@ def get_vatsim_status():
 
 
 def get_vatsim_data():
+    from main import debug, verbose
+
     # To avoid abusing the data servers, we want to first check the cached data if it is out of date.
     # Open the cached data file - FIXME Replace with database instead of local file
     global status, data_last_update
