@@ -4,6 +4,7 @@ import time
 from sqlite3 import Error
 
 from navdata.classes import Airport, Flight
+from navdata.navdata import load_airac_data
 from tools import db_init, calc_functions
 import navdata.tools
 from classes.vatsim_pilot import Pilot, Flightplan
@@ -28,8 +29,8 @@ parser.add_argument("-d", "--debug", help="(Optional) Set debug mode; sets certa
 # Parse all the available
 args = parser.parse_args()
 
-debug = args.debug
-verbose = args.verbose
+debug = True
+verbose = True
 
 if __name__ == '__main__':
 
@@ -82,7 +83,7 @@ if __name__ == '__main__':
             if verbose:
                 print("Database exists... Continue.")
             if args.navdata is not None:
-                load_data = navdata.load_airac_data(args.navdata, args.skip)
+                load_data = load_airac_data(args.navdata, args.skip)
                 if load_data is True:
                     if verbose:
                         print("Success! Navdata loaded.")

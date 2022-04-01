@@ -1,5 +1,9 @@
+import math
 from math import acos, sin, cos, radians, atan2, sqrt
-from main import debug, verbose
+import numpy
+
+
+debug = verbose = True
 
 
 def distance_between_coordinates(src, dst):
@@ -46,9 +50,20 @@ def distance_points(src, dst):
     dlat = lat2 - lat1
     a = (sin(dlat / 2)) ** 2 + cos(lat1) * cos(lat2) * (sin(dlon / 2)) ** 2
 
-    R = 6373.0
+    R = 6371.0  # The radius of the earth in kilometers. #metricsystem
 
     c = 2 * atan2(sqrt(a), sqrt(1 - a))
     distance = R * c
 
-    return distance / 1.852
+    return distance / 1.852  # Returns in nautical miles, because aviation
+
+
+def get_bearing(lat1, long1, lat2, long2):
+    dLon = (long2 - long1)
+    x = math.cos(math.radians(lat2)) * math.sin(math.radians(dLon))
+    y = math.cos(math.radians(lat1)) * math.sin(math.radians(lat2)) - math.sin(math.radians(lat1)) * math.cos(
+        math.radians(lat2)) * math.cos(math.radians(dLon))
+    brng = numpy.arctan2(x, y)
+    brng = numpy.degrees(brng)
+
+    return brng
