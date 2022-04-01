@@ -1,11 +1,15 @@
 import json
 import os
 import argparse
+
+import requests
+
 from navdata.classes import Country, Airport, Fir, Uir, Idl
 import navdata.tools as tools
 from sqlite3 import Error
-from main import debug, verbose
 
+debug = True
+verbose = True
 
 
 def load_airac_data(inputFile, skip):
@@ -14,7 +18,6 @@ def load_airac_data(inputFile, skip):
     :param inputFile:
     :return: True, Number of inserted items, number of errored items, number of skipped items.
     """
-
 
     with open(inputFile) as data_file:
         data_json = json.load(data_file)
@@ -153,7 +156,7 @@ def load_airac_data(inputFile, skip):
 
             # When done with this category, print a summary of what has been done
             print("FIRs --- Inserted: {} - Failed: {} - Skipped: {}".format(insert_count, failed_count,
-                                                                                skip_count))
+                                                                            skip_count))
             # Add to the total counters of actions
             total_insert += insert_count
             total_failed += failed_count
@@ -183,7 +186,7 @@ def load_airac_data(inputFile, skip):
 
             # When done with this category, print a summary of what has been done
             print("UIRs --- Inserted: {} - Failed: {} - Skipped: {}".format(insert_count, failed_count,
-                                                                                skip_count))
+                                                                            skip_count))
             # Add to the total counters of actions
             total_insert += insert_count
             total_failed += failed_count
@@ -216,7 +219,6 @@ def load_airac_data(inputFile, skip):
             total_insert += insert_count
             total_failed += failed_count
 
-
     # Outside loop
     print("--------------")
     print("Total --- Inserted: {} - Failed: {} - Skipped: {}".format(total_insert, total_failed,
@@ -238,5 +240,6 @@ if __name__ == '__main__':
 
     if not args.filename:
         print("You must specify a filename with -f. Use --help for more info.")
+
 
     load_airac_data(args.filename, args.skip)
