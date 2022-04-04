@@ -11,7 +11,7 @@ jobs:
       with:
         fetch-depth: ‘2’
     - name: Setup Python
-      uses: actions/setup-python
+      uses: actions/setup-python@latest
       with:
         python-version: 3.7
     - name: Generate Report
@@ -19,4 +19,4 @@ jobs:
         pip install coverage
         coverage run -m unittest
     - name: Upload Coverage to Codecov
-      uses: codecov/codecov-action
+      uses: codecov/codecov-action@latest
