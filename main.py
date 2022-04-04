@@ -8,11 +8,16 @@ from navdata.navdata import load_airac_data
 from tools import db_init, calc_functions
 import navdata.tools
 from classes.vatsim_pilot import Pilot, Flightplan
-import navdata
-import vatsim_data.vatsim_data
+from vatsim_data.vatsim_data import get_vatsim_data, get_vatsim_status
 
-global debug
-global verbose
+
+global DEBUG
+global VERBOSE
+global NUMBER_OF_PILOTS
+
+NUMBER_OF_PILOTS = 0
+VERBOSE = os.environ.get('VERBOSE', False)
+DEBUG = os.environ.get('DEBUG', False)
 
 # Get commandline arguments that the user may input to customize the application.
 parser = argparse.ArgumentParser()
@@ -20,17 +25,14 @@ parser = argparse.ArgumentParser()
 # Specify the arguments available to the user
 parser.add_argument("-n", "--navdata", help="The path to the navdata input file")
 parser.add_argument("-s", "--skip", help="(Optional) Pass in a JSON object in the navdata JSON file to be "
-                                         "skipped to save debug time")
-parser.add_argument("-v", "--verbose", help="(Optional) Add verbose debugging output",
+                                         "skipped to save DEBUG time")
+parser.add_argument("-v", "--verbose", help="(Optional) Add VERBOSE debugging output",
                     default=False, action='store_true')
-parser.add_argument("-d", "--debug", help="(Optional) Set debug mode; sets certain parameters to default values "
+parser.add_argument("-d", "--debug", help="(Optional) Set DEBUG mode; sets certain parameters to default values "
                                           "and ignores live VATSIM data.", default=False, action='store_true')
 
 # Parse all the available
 args = parser.parse_args()
-
-debug = True
-verbose = True
 
 if __name__ == '__main__':
 
@@ -39,35 +41,34 @@ if __name__ == '__main__':
 
     print("Loading data...")
     # Check if we're in production or not.
-    if os.environ['env'] != 'prod':
+    if os.environ.get('ENV') != 'prod':
         # Check if the dev db exists, if not, create one.
         if not os.path.isfile('dev.db'):
-            if verbose:
-                print("Database not found... Creating...")
+            print("Database not found... Creating...")
             db, db_name = db_init.sql_connection()
             try:
                 db_file = db_init.sql_table(db)
-                if db_file is True and verbose is True:
+                if db_file is True:
                     print("Success! Created new file " + db_name)
                 else:
-                    if verbose:
-                        print("Failed to create database... 😭 ", db_file[1])
+                    print("Failed to create database... 😭 ", db_file)
 
                 create_tables = navdata.tools.create_base_tables(db)
-                if verbose:
+                if VERBOSE:
                     print("Creating base tables...")
                 if create_tables is True:
-                    if verbose:
-                        print("Success! Tables created successfully! 🎉 ")
+                    print("Success! Tables created successfully! 🎉 ")
                 else:
                     print("❌ ERROR! Failed to create base tables.")
             except Error as e:
                 print(e)
                 os.abort()
 
-            print("Loading navdata...")
+            if VERBOSE is True:
+                print("Loading navdata...")
+
             if args.navdata is not None:
-                load_data = navdata.load_airac_data(args.navdata, args.skip)
+                load_data = load_airac_data(args.navdata, args.skip)
                 if load_data is True:
                     print("🎉 Success! Navdata loaded.")
                 else:
@@ -80,25 +81,26 @@ if __name__ == '__main__':
                 os.abort()
 
         else:
-            if verbose:
+            if VERBOSE is True:
                 print("Database exists... Continue.")
             if args.navdata is not None:
                 load_data = load_airac_data(args.navdata, args.skip)
                 if load_data is True:
-                    if verbose:
+                    if VERBOSE is True:
                         print("Success! Navdata loaded.")
                 else:
                     print("❌ ERROR! Failed to load navdata...", load_data[1])
         con = db_init.connect_db("dev.db")
 
-    print("Data loaded OK.")
+    if VERBOSE is True:
+        print("Data loaded OK.")
 
     statusJson = vatsim_data.vatsim_data.get_vatsim_status()
     data = statusJson["v3"].pop()
 
     live_data, status = vatsim_data.vatsim_data.get_vatsim_data()
 
-    if verbose:
+    if VERBOSE is True:
         print("Data Status:" + status)
 
     print("------------------------------------------------------------------\n")
@@ -106,16 +108,22 @@ if __name__ == '__main__':
     pilot1 = live_data["pilots"][0]
     pilot2 = live_data["pilots"][1]
     i = 0
+
+    NUMBER_OF_PILOTS = len(live_data["pilots"])
+
     for i, x in enumerate(live_data["pilots"]):
         # Create a single position value based on the lat, lon of the pilots position for easy reference.
         # Append it to the existing dict.
-        x["position"] = {"lat": x["latitude"], "lon": x["longitude"]}
+        x["position"] = {
+            "lat": x["latitude"],
+            "lon": x["longitude"]
+        }
 
         print()
         # Turn the dictionary into an object
         pilot = Pilot.from_dict(x)
 
-        if debug:
+        if DEBUG is True:
             print("🐛 Debug - pilot:", pilot)
 
         # FIXME, for now, only deal with pilots that have a flightplan
@@ -125,9 +133,10 @@ if __name__ == '__main__':
             pilot_dep_airport_coords = Airport.info(con, flight_plan.departure, "coordinates")
             pilot_arr_airport_coords = Airport.info(con, flight_plan.arrival, "coordinates")
 
+
+            print("🐛 Debug - pilot_arr/dep_airport_coords", pilot_arr_airport_coords, pilot_dep_airport_coords)
+
             if pilot_dep_airport_coords and pilot_arr_airport_coords is not False:
-                if debug:
-                    print("🐛 Debug - pilot_arr/dep_airport_coords", pilot_arr_airport_coords, pilot_dep_airport_coords)
 
                 dist_departure = round(
                     calc_functions.distance_between_coordinates(pilot_dep_airport_coords, pilot.position))
@@ -137,9 +146,9 @@ if __name__ == '__main__':
                 if dist_arrival < 10 and pilot.groundspeed < 50:
                     print(pilot.callsign, ": 🛬 Probably arrived at", flight_plan.arrival, "Distance from "
                                                                                            "arrival -",
-                                                                                            dist_arrival)
+                          dist_arrival)
 
-                    # FIXME Insert into flights table - Temp variable name
+                    # FIXME Insert into flight_updates table - Temp variable name
                     stuff = Flight(i, i, pilot.cid, pilot.latitude, pilot.longitude, pilot.position,
                                    pilot.altitude, pilot.groundspeed, pilot.transponder, pilot.heading,
                                    pilot.flight_plan, 1, 2, time.time(), False, False)
@@ -150,7 +159,7 @@ if __name__ == '__main__':
                     print(pilot.callsign, ": 🛫 Probably not departed from", flight_plan.departure, "yet... Distance "
                                                                                                     "from departure "
                                                                                                     "-",
-                                                                                                    dist_departure)
+                          dist_departure)
                 elif pilot.groundspeed >= 50:
                     print(pilot.callsign, ": 🛩 In flight. Distance from arrival -", dist_arrival, "Altitude:",
                           pilot.altitude)
@@ -164,13 +173,11 @@ if __name__ == '__main__':
             # Need to check their current position against the last position.
             # Also need to check distance from origin and destination.
 
-            if debug:
-                print("i is:", i)
-                if i == 10:
-                    break
-                else:
-                    i += 1
-
-        else:
+        else:  # FIXME - pilot has no flightplan
             print(pilot.callsign, ": ❌ This pilot is a dumbass and flying without a flightplan. So... We're skipping "
                                   "him.")
+
+print("\n-------- DEBUG --------")
+print("| # pilots:", NUMBER_OF_PILOTS)
+print("| DEBUG:", DEBUG)
+print("| VERBOSE:", VERBOSE)
