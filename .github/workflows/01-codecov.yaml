@@ -10,9 +10,8 @@ jobs:
     - uses: checkout@v2
       with:
         fetch-depth: ‘2’
-
     - name: Setup Python
-      uses: actions/setup-python@master
+      uses: actions/setup-python
       with:
         python-version: 3.7
     - name: Generate Report
