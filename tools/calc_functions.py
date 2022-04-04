@@ -2,24 +2,17 @@ import math
 from math import acos, sin, cos, radians, atan2, sqrt
 import numpy
 
-
-debug = verbose = True
-
+DEBUG = False
+VERBOSE = False
 
 def distance_between_coordinates(src, dst):
-    if debug and verbose is True:
-        lat1 = radians(58.964432)
-        lat2 = radians(59.913868)
-        lon1 = radians(5.726250)
-        lon2 = radians(10.752245)
-    else:
-        lat1 = radians(src['lat'])
-        lon1 = radians(src['lon'])
-        lat2 = radians(dst['lat'])
-        lon2 = radians(dst['lon'])
+    lat1 = radians(src['lat'])
+    lon1 = radians(src['lon'])
+    lat2 = radians(dst['lat'])
+    lon2 = radians(dst['lon'])
 
-    if debug and verbose is True:
-        print(debug, lat1, lon1, lat2, lon2)
+    if DEBUG and VERBOSE is True:
+        print(DEBUG, lat1, lon1, lat2, lon2)
         print("Debug: 3963 * acos(sin({lat1}) * sin({lat2}) + cos({lat1}) * cos({lat2}) * cos({lon2} - {lon1})".format(
             lat1=lat1, lon1=lon1, lat2=lat2, lon2=lon2))
 
@@ -28,7 +21,7 @@ def distance_between_coordinates(src, dst):
     # Convert statute miles to nautical miles
     d = d * 0.87
 
-    if debug and verbose is True:
+    if DEBUG and VERBOSE is True:
         print("Control (Should be 164):", round(d))
 
     return d
@@ -58,12 +51,19 @@ def distance_points(src, dst):
     return distance / 1.852  # Returns in nautical miles, because aviation
 
 
-def get_bearing(lat1, long1, lat2, long2):
+def get_bearing(source, dest):
+    lat1 = source['lat']
+    lat2 = dest['lat']
+    long1 = source['lon']
+    long2 = dest['lon']
+
     dLon = (long2 - long1)
     x = math.cos(math.radians(lat2)) * math.sin(math.radians(dLon))
     y = math.cos(math.radians(lat1)) * math.sin(math.radians(lat2)) - math.sin(math.radians(lat1)) * math.cos(
         math.radians(lat2)) * math.cos(math.radians(dLon))
     brng = numpy.arctan2(x, y)
     brng = numpy.degrees(brng)
+
+    print(brng)
 
     return brng

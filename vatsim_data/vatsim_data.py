@@ -12,7 +12,7 @@ def get_vatsim_status():
 
 
 def get_vatsim_data():
-    from main import debug, verbose
+    from main import DEBUG, VERBOSE
 
     # To avoid abusing the data servers, we want to first check the cached data if it is out of date.
     # Open the cached data file - FIXME Replace with database instead of local file
@@ -30,7 +30,7 @@ def get_vatsim_data():
     # Get the current time in UTC
     time_now = datetime.now(pytz.utc)
     time_stamp = time_now.strftime("%Y%m%d%H%M%S")
-    if verbose is True:
+    if VERBOSE is True:
         print("TIMESTAMP:" + time_stamp)
 
     # Check the cached data when it was last updated
@@ -38,12 +38,12 @@ def get_vatsim_data():
         data_last_update = data_json["general"]["update"]
     except ValueError as err:
         result = err
-    if verbose is True:
+    if VERBOSE is True:
         print("CURRENT DATA TIME:" + data_last_update)
 
     # Compare the difference between the cached data and local time
     data_time_difference = int(time_stamp) - int(data_last_update)
-    if verbose is True:
+    if VERBOSE is True:
         print("Current diff: " + str(data_time_difference))
 
     # The data is stale - it has been more than 90 seconds since the last update
@@ -57,7 +57,7 @@ def get_vatsim_data():
         print("Data loaded OK...")
 
         new_data_update_time = data_json["general"]["update"]
-        if verbose is True:
+        if VERBOSE is True:
             print("New update time:" + new_data_update_time)
 
         if data_last_update != new_data_update_time:
