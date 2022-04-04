@@ -42,8 +42,8 @@ def test_with_sample_data1(setup_test_data1):
 
 
 def test_sql_connection():  # Test that the dev database is created
-    assert db_init.sql_connection() != False
+    assert db_init.sql_connection() is not False
 
 
 def test_sql_table(session):  # Test we are able to create the correct tables in the database
-    assert db_init.sql_table(session) == True
+    assert db_init.sql_table(session) is True

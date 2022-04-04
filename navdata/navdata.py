@@ -11,6 +11,7 @@ from sqlite3 import Error
 DEBUG = False
 VERBOSE = False
 
+
 def load_airac_data(inputFile, skip):
     """
     Loads data from an input .json file and inserts it into the database.
@@ -239,6 +240,5 @@ if __name__ == '__main__':
 
     if not args.filename:
         print("You must specify a filename with -f. Use --help for more info.")
-
 
     load_airac_data(args.filename, args.skip)

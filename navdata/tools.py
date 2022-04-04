@@ -28,7 +28,7 @@ def create_table(con, create_table_sql):
     :return:
     """
     try:
-        c = con.cursor()
+        c = con
         c.execute(create_table_sql)
         return True
     except Error as e:
