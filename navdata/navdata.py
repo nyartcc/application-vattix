@@ -8,9 +8,8 @@ from navdata.classes import Country, Airport, Fir, Uir, Idl
 import navdata.tools as tools
 from sqlite3 import Error
 
-debug = True
-verbose = True
-
+DEBUG = False
+VERBOSE = False
 
 def load_airac_data(inputFile, skip):
     """
@@ -24,10 +23,10 @@ def load_airac_data(inputFile, skip):
 
     # Mumbo jumbo to ensure environment variables are initialized properly.
     # If none are set, assume we're in dev.
-    if os.environ.get('env') is not None:
-        environment = os.environ['env']
+    if os.environ.get('ENV') is not None:
+        environment = os.environ['ENV']
     else:
-        environment = os.environ.get('env')
+        environment = os.environ.get('ENV')
 
     # Check if we're in development or not.
     if environment != "prod":
@@ -62,14 +61,14 @@ def load_airac_data(inputFile, skip):
             try:
                 update_general = tools.insert_general(con, general)
                 if update_general:
-                    if verbose:
+                    if VERBOSE:
                         print("Inserted {}".format(general))
                 else:
                     print("Updating general info failed!")
             except Error as e:
                 print("Updating general info failed...", e)
 
-            if verbose:
+            if VERBOSE:
                 print(data_json['general']['version'])
 
         if x == "countries" and skip != "countries":
@@ -82,13 +81,13 @@ def load_airac_data(inputFile, skip):
                     try:
                         create_country = tools.insert_country(con, country)
                         insert_count += 1
-                        if verbose:
+                        if VERBOSE:
                             print("{}".format(create_country[2]))
                     except Error as e:
                         print("Failed.", e)
                         failed_count += 1
                 else:
-                    if verbose is True:
+                    if VERBOSE is True:
                         print("{} already exists in the database...".format(y["code"]))
                     skip_count += 1
 
@@ -107,7 +106,7 @@ def load_airac_data(inputFile, skip):
                 airport = Airport(y["icao"], y["name"], y["latitude"], y["longitude"], y["iata"], y["fir"],
                                   y["isPseudo"])
 
-                if verbose:
+                if VERBOSE:
                     print(airport)
 
                 check = tools.check_duplicate(con, x, "icao", y["icao"])
@@ -135,14 +134,14 @@ def load_airac_data(inputFile, skip):
         if x == "firs":
             for i, y in items:
                 fir = Fir(y["icao"], y["name"], y["callsignPrefix"], y["firBoundary"])
-                if verbose:
+                if VERBOSE:
                     print(fir)
 
                 check = tools.check_duplicate(con, x, "icao", fir.icao)
                 if check is False:
                     try:
                         create_fir = tools.insert_fir(con, fir)
-                        if verbose:
+                        if VERBOSE:
                             print(create_fir)
                         if create_fir:
                             insert_count += 1
@@ -151,7 +150,7 @@ def load_airac_data(inputFile, skip):
                         failed_count += 1
                 else:
                     skip_count += 1
-                    if verbose:
+                    if VERBOSE:
                         print("Skipped FIR {}".format(fir.icao))
 
             # When done with this category, print a summary of what has been done
@@ -165,14 +164,14 @@ def load_airac_data(inputFile, skip):
         if x == "uirs":
             for i, y in items:
                 uir = Uir(y["prefix"], y["name"], y["coverageFirs"])
-                if verbose:
+                if VERBOSE:
                     print(uir)
 
                 check = tools.check_duplicate(con, x, "name", uir.name)
                 if check is False:
                     try:
                         create_uir = tools.insert_uir(con, uir)
-                        if verbose:
+                        if VERBOSE:
                             print(create_uir)
                         if create_uir:
                             insert_count += 1
@@ -181,7 +180,7 @@ def load_airac_data(inputFile, skip):
                         failed_count += 1
                 else:
                     skip_count += 1
-                    if verbose:
+                    if VERBOSE:
                         print("Skipped UIR {}".format(uir.name))
 
             # When done with this category, print a summary of what has been done
@@ -200,12 +199,12 @@ def load_airac_data(inputFile, skip):
 
                 for i, y in items:
                     idl = Idl(y["cord1"], y["cord2"])
-                    if verbose:
+                    if VERBOSE:
                         print(idl)
 
                     try:
                         create_idl = tools.insert_idl(con, idl)
-                        if verbose:
+                        if VERBOSE:
                             print(create_idl)
                         if create_idl:
                             insert_count += 1
@@ -224,7 +223,7 @@ def load_airac_data(inputFile, skip):
     print("Total --- Inserted: {} - Failed: {} - Skipped: {}".format(total_insert, total_failed,
                                                                      total_skip))
 
-    if verbose is True:
+    if VERBOSE is True:
         print(data_json["general"])
 
     return True
@@ -235,7 +234,7 @@ if __name__ == '__main__':
 
     # -f FILE
     parser.add_argument("-f", "--filename", help="The path to the input file", default="navdata/VATSpy.json")
-    parser.add_argument("-s", "--skip", help="(Optional) Pass in a JSON object to be skipped to save debug time")
+    parser.add_argument("-s", "--skip", help="(Optional) Pass in a JSON object to be skipped to save DEBUG time")
     args = parser.parse_args()
 
     if not args.filename:

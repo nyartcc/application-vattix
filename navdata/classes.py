@@ -132,7 +132,7 @@ class Flight:
         """
         print(flight)
 
-        sql = '''INSERT INTO flights (connection_id, update_id, cid, latitude, longitude, altitude, groundspeed, 
+        sql = '''INSERT INTO flight_updates (connection_id, update_id, cid, latitude, longitude, altitude, groundspeed, 
         transponder, heading, flight_plan, departure_time, arrival_time, update_time, departed, arrived) 
         VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)'''
 
