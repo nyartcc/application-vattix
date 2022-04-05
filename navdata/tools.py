@@ -1,3 +1,5 @@
+import logging
+import os
 import sqlite3
 from sqlite3 import Error
 from tools import helper
@@ -13,11 +15,10 @@ idl_table = config['DatabaseSettings']['idl_table']
 
 def connect_db(db_file):
     con = None
-    try:
-        con = sqlite3.connect(db_file)
-        return con
-    except Error as e:
-        print(e)
+
+    con = sqlite3.connect(db_file)
+    con = con.cursor()
+    return con
 
 
 def create_table(con, create_table_sql):
@@ -32,7 +33,7 @@ def create_table(con, create_table_sql):
         c.execute(create_table_sql)
         return True
     except Error as e:
-        print(e)
+        logging.exception(e)
         return False
 
 
@@ -86,19 +87,16 @@ def create_base_tables(con):
                                                 );""".format(general_table)
 
     # If connection is successful, run the SQL to create the tables.
-    try:
-        create_table(con, sql_create_country_table)
-        create_table(con, sql_create_airport_table)
-        create_table(con, sql_create_fir_table)
-        create_table(con, sql_create_uir_table)
-        create_table(con, sql_create_idl_table)
-        create_table(con, sql_create_general_table)
-        return True
-    except Error as e:
-        return False, e
+    create_table(con, sql_create_country_table)
+    create_table(con, sql_create_airport_table)
+    create_table(con, sql_create_fir_table)
+    create_table(con, sql_create_uir_table)
+    create_table(con, sql_create_idl_table)
+    create_table(con, sql_create_general_table)
+    return True
 
 
-def insert_general(con, general):
+def insert_general(con, general, **kwargs):
     """
     Insert or update the general settings in the database.
     :param con: The connection object.
@@ -109,19 +107,21 @@ def insert_general(con, general):
 
     check = check_duplicate(con, general_table, 'id', 1)
 
-    if check is not True:
-        sql = ''' REPLACE INTO {}('version', 'lastUpdated', 'vatspyData')
+    if check[0] is not True:
+        sql = ''' INSERT INTO {}('version', 'lastUpdated', 'vatspyData')
                     VALUES(?,?,?)'''.format(general_table)
     else:
         sql = ''' UPDATE {} SET version=?, lastupdated=?, vatspydata=? WHERE id=1'''.format(general_table)
 
     try:
-#        cur = con.cursor()
-        con.execute(sql, general)
-        #con.commit()
-        return True, con.lastrowid
+        if kwargs.get('column'):
+            con.execute(sql, kwargs.get('column'))
+        else:
+            con.execute(sql, general)
+        return True
     except Error as e:
-        return False, e
+        logging.exception(e)
+        return False
 
 
 def insert_country(con, country):
@@ -145,7 +145,7 @@ def insert_country(con, country):
 
     try:
         con.execute(sql)
-        #con.commit()
+        # con.commit()
         return True, con.lastrowid, action
     except Error as e:
         print("Failed to insert country {}. Error:".format(country.name), e)
@@ -182,9 +182,9 @@ def insert_airport(con, airport):
         action = "insert"
 
     try:
-        cur = con.cursor()
-        cur.execute(sql)
-        con.commit()
+        cur = con
+        con.execute(sql)
+        #con.commit()
         return True, cur.lastrowid, action
     except Error as e:
         print("Failed to {} airport {} :".format(action, airport.icao), e)
@@ -217,9 +217,9 @@ def insert_fir(con, fir):
         action = "insert"
 
     try:
-        cur = con.cursor()
+        cur = con
         cur.execute(sql)
-        con.commit()
+        # con.commit()
         return True, cur.lastrowid, action
     except Error as e:
         print("Failed to {} thing {}:".format(action, fir.icao), e)
@@ -250,9 +250,9 @@ def insert_uir(con, uir):
         action = "insert"
 
     try:
-        cur = con.cursor()
+        cur = con
         cur.execute(sql)
-        con.commit()
+        # con.commit()
         return True, cur.lastrowid, action
     except Error as e:
         print("Failed to {} UIR {}:".format(action, uir.name), e)
@@ -262,9 +262,9 @@ def insert_uir(con, uir):
 def delete_idl(con):
     drop_previous_idl = ''' DELETE FROM {} WHERE id > 0'''.format(idl_table)
     try:
-        cur = con.cursor()
+        cur = con
         cur.execute(drop_previous_idl)
-        con.commit()
+        # con.commit()
 
         return True
     except Error as e:
@@ -283,9 +283,9 @@ def insert_idl(con, idl):
     action = "insert"
 
     try:
-        cur = con.cursor()
+        cur = con
         cur.execute(sql)
-        con.commit()
+        # con.commit()
 
         return True, cur.lastrowid, action
     except Error as e:
@@ -307,6 +307,6 @@ def check_duplicate(con, table, value1, value2):
     row = con.fetchone()
 
     if row is None:
-        return False
+        return False, None
     else:
         return True, row[0]
