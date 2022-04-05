@@ -108,6 +108,7 @@ def insert_general(con, general):
     """
 
     check = check_duplicate(con, general_table, 'id', 1)
+
     if check is not True:
         sql = ''' REPLACE INTO {}('version', 'lastUpdated', 'vatspyData')
                     VALUES(?,?,?)'''.format(general_table)
@@ -115,10 +116,10 @@ def insert_general(con, general):
         sql = ''' UPDATE {} SET version=?, lastupdated=?, vatspydata=? WHERE id=1'''.format(general_table)
 
     try:
-        cur = con.cursor()
-        cur.execute(sql, general)
-        con.commit()
-        return True, cur.lastrowid
+#        cur = con.cursor()
+        con.execute(sql, general)
+        #con.commit()
+        return True, con.lastrowid
     except Error as e:
         return False, e
 
@@ -131,7 +132,7 @@ def insert_country(con, country):
     :return: True if successful along with the id of the row inserted.
     """
 
-    check = check_duplicate(con, country_table, 'code', country.code)
+    check = check_duplicate(con, country_table, 'id', country.id)
 
     if check is True:
         sql = '''UPDATE countries SET countries.name={0}, countries.code={1}, countries.type={2} WHERE id={3}'''.format(
@@ -143,10 +144,9 @@ def insert_country(con, country):
         action = "Inserted"
 
     try:
-        cur = con.cursor()
-        cur.execute(sql)
-        con.commit()
-        return True, cur.lastrowid, action
+        con.execute(sql)
+        #con.commit()
+        return True, con.lastrowid, action
     except Error as e:
         print("Failed to insert country {}. Error:".format(country.name), e)
         return False
@@ -302,10 +302,9 @@ def check_duplicate(con, table, value1, value2):
     :param value2: The comparison object
     :return: True if there is a duplicate along with the duplicate row id.
     """
-    cur = con.cursor()
     sql = "SELECT * FROM {} WHERE {} = '{}'".format(table, value1, value2)
-    cur.execute(sql)
-    row = cur.fetchone()
+    con.execute(sql)
+    row = con.fetchone()
 
     if row is None:
         return False

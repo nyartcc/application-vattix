@@ -47,3 +47,5 @@ def test_sql_connection():  # Test that the dev database is created
 
 def test_sql_table(session):  # Test we are able to create the correct tables in the database
     assert db_init.sql_table(session) is True
+
+
