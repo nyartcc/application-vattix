@@ -95,10 +95,10 @@ if __name__ == '__main__':
     if VERBOSE is True:
         print("Data loaded OK.")
 
-    statusJson = vatsim_data.vatsim_data.get_vatsim_status()
+    statusJson = get_vatsim_status()
     data = statusJson["v3"].pop()
 
-    live_data, status = vatsim_data.vatsim_data.get_vatsim_data()
+    live_data, status = get_vatsim_data()
 
     if VERBOSE is True:
         print("Data Status:" + status)
