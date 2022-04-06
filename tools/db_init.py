@@ -1,18 +1,8 @@
+import logging
 import os
 import sqlite3
 
 from sqlite3 import Error
-
-
-def sql_connection():
-    try:
-        db_file = 'dev.db'
-        con = sqlite3.connect(db_file)
-
-        return con, db_file
-
-    except Error:
-        print(Error)
 
 
 def sql_table(con):
@@ -29,14 +19,11 @@ def sql_table(con):
             "departure_time text, arrival_time int, update_time int, departed int, arrived int)")
 
         return True
-    except Error as e:
+    except Error as e:  # pragma: no cover
         return False, e
 
 
 def connect_db(db_file):
     con = None
-    try:
-        con = sqlite3.connect(db_file)
-        return con
-    except Error as e:
-        print(e)
+    con = sqlite3.connect(db_file)
+    return con
