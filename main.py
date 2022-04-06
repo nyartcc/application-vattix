@@ -45,7 +45,7 @@ if __name__ == '__main__':
         # Check if the dev db exists, if not, create one.
         if not os.path.isfile('dev.db'):
             print("Database not found... Creating...")
-            db, db_name = db_init.sql_connection()
+            db, db_name = db_init.connect_db('dev.db')
             try:
                 db_file = db_init.sql_table(db)
                 if db_file is True:
@@ -95,10 +95,10 @@ if __name__ == '__main__':
     if VERBOSE is True:
         print("Data loaded OK.")
 
-    statusJson = vatsim_data.vatsim_data.get_vatsim_status()
+    statusJson = get_vatsim_status()
     data = statusJson["v3"].pop()
 
-    live_data, status = vatsim_data.vatsim_data.get_vatsim_data()
+    live_data, status = get_vatsim_data()
 
     if VERBOSE is True:
         print("Data Status:" + status)

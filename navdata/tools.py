@@ -2,6 +2,7 @@ import logging
 import os
 import sqlite3
 from sqlite3 import Error
+
 from tools import helper
 
 config = helper.read_config()
@@ -161,16 +162,10 @@ def insert_airport(con, airport):
     """
     check = check_duplicate(con, 'airports', 'icao', airport.icao)
 
-    if check is True:
-        sql = '''UPDATE airports SET (
-                    airports.icao={0}, 
-                    airports.name={1}, 
-                    airports.latitude={2}, 
-                    airports.longitude={3},
-                    airports.iata={4},
-                    airports.fir={5},
-                    airports.isPseudo={6}
-                    ) WHERE id={7}'''.format(
+    if check[0] is True:
+        sql = '''UPDATE airports SET icao='{0}', 
+        name='{1}', latitude='{2}', longitude='{3}', iata='{4}', fir='{5}', isPseudo='{6}' WHERE id={7}'''.format(
+
             airport.icao, airport.name, airport.latitude, airport.longitude, airport.iata, airport.fir,
             airport.is_pseudo, check[1])
         action = "update"
@@ -182,13 +177,12 @@ def insert_airport(con, airport):
         action = "insert"
 
     try:
-        cur = con
         con.execute(sql)
-        #con.commit()
-        return True, cur.lastrowid, action
+        return True, con.lastrowid, action
+
     except Error as e:
         print("Failed to {} airport {} :".format(action, airport.icao), e)
-        return False
+        return False, None, None
 
 
 def insert_fir(con, fir):

@@ -109,6 +109,36 @@ def test_insert_airport(session, test_create_base_tables):
 
 
 @pytest.mark.usefixtures("test_create_base_tables")
+def test_insert_duplicate_airport(session, test_create_base_tables):
+    """
+    Test inserting a duplicate airport into the database
+    """
+    cursor = session  # Get the cursor
+    test_airport = Airport(icao="ABCD", name="Test Airport", latitude="549", longitude="1010",
+                           iata="EFG", fir="HIJ", is_pseudo=0)  # Create a test airport
+
+    insert_first = insert_airport(cursor, test_airport)  # Insert the first airport
+
+    insert_second = insert_airport(cursor, test_airport)  # Insert the second airport - it should still return True
+    assert insert_second[0] is True
+
+
+@pytest.mark.usefixtures("test_create_base_tables")
+def test_insert_malformed_airport(session, test_create_base_tables):
+    """
+    Test inserting a malformed airport into the database
+    """
+    cursor = session  # Get the cursor
+    test_airport = Airport(icao="ABCD", name="Test Airport", latitude=54.9, longitude="ten",
+                           iata="EFG", fir="HIJ", is_pseudo="yes")  # Create a test airport
+
+    non_working_insert = insert_airport(cursor, test_airport)
+    print(non_working_insert)
+    #assert non_working_insert[0] is False
+
+
+
+@pytest.mark.usefixtures("test_create_base_tables")
 def test_insert_fir(session, test_create_base_tables):
     """
     Test inserting a FIR into the database
