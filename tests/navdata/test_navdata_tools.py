@@ -96,6 +96,18 @@ def test_insert_country(session, test_create_base_tables):
 
 
 @pytest.mark.usefixtures("test_create_base_tables")
+def test_insert_duplicate_country(session, test_create_base_tables):
+    """
+    Test inserting a duplicate country into the database
+    """
+    cursor = session  # Get the cursor
+    test_country = Country(name="Test Country", code="TC", type="Test Type")  # Create a test country
+    insert_first = insert_country(cursor, test_country)  # Insert the first country
+    insert_second = insert_country(cursor, test_country)  # Insert the country again - it should still return True
+    assert insert_second[0] is True  # Use the first return and verify that it is True
+
+
+@pytest.mark.usefixtures("test_create_base_tables")
 def test_insert_airport(session, test_create_base_tables):
     """
     Test inserting an airport into the database
@@ -133,9 +145,7 @@ def test_insert_malformed_airport(session, test_create_base_tables):
                            iata="EFG", fir="HIJ", is_pseudo="yes")  # Create a test airport
 
     non_working_insert = insert_airport(cursor, test_airport)
-    print(non_working_insert)
-    #assert non_working_insert[0] is False
-
+    # assert non_working_insert[0] is False
 
 
 @pytest.mark.usefixtures("test_create_base_tables")

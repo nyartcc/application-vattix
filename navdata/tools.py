@@ -133,11 +133,12 @@ def insert_country(con, country):
     :return: True if successful along with the id of the row inserted.
     """
 
-    check = check_duplicate(con, country_table, 'id', country.id)
-
-    if check is True:
-        sql = '''UPDATE countries SET countries.name={0}, countries.code={1}, countries.type={2} WHERE id={3}'''.format(
+    check = check_duplicate(con, country_table, 'name', country.name)
+    print(check)
+    if check[0] is True:
+        sql = '''UPDATE countries SET name='{0}', code='{1}', type='{2}' WHERE id={3}'''.format(
             country.name, country.code, country.type, check[1])
+        print(sql)
         action = "Updated"
     else:
         sql = ''' REPLACE INTO countries('name', 'code', 'type')
