@@ -93,5 +93,5 @@ def test_airport_info(session, test_create_base_tables):
     insert = insert_airport(session, test_airport)  # Insert the airport
 
     assert (Airport.info(con, "ENZV", "coordinates") == {'lat': 54.1, 'lon': '-12'})
-
+    assert (Airport.info(con, "ENZV", "name") == "Stavanger") is False
 
