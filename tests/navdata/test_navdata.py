@@ -1,8 +1,10 @@
 import pytest
 
 from navdata.classes import Airport
+from navdata.tools import insert_airport
 from tools import db_init
 from tests.navdata.test_navdata_tools import session, test_create_base_tables
+
 
 def test_field_access():
     a = Airport("ENZV", "Stavanger", 54.1, -12, {"latitude": 54.1, "longitude": -12}, "SVG", "ENSV", 0, 123)
@@ -81,11 +83,15 @@ def test_to_dict():
     assert a2 == a2_expected
 
 
-@pytest.mark.usefixtures("test_create_base_tables")
+@pytest.mark.usefixtures("session", "test_create_base_tables")
 def test_airport_info(session, test_create_base_tables):
-    a1 = Airport("ENZV", "Stavanger", 54.1, -12, {"latitude": 54.1, "longitude": -12}, "SVG", "ENSV", 0, 123)
+    con = session
 
-    con = db_init.connect_db("dev.db")
+    test_airport = Airport("ENZV", "Stavanger", 54.1, -12, {"latitude": 54.1, "longitude": -12}, "SVG", "ENSV", 0,
+                           123)  # Create a test airport
 
-    assert (Airport.info(con, "ENZV", "coordinates") == {'lat': -9.191365, 'lon': 160.948836})
-    assert (Airport.info(con, "ENZV", "country") is None)
+    insert = insert_airport(session, test_airport)  # Insert the airport
+
+    assert (Airport.info(con, "ENZV", "coordinates") == {'lat': 54.1, 'lon': '-12'})
+
+

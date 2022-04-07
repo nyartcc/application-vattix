@@ -37,18 +37,19 @@ class Airport:
          :return:
          """
 
-        cur = con.cursor()
+        cur = con
         sql = "SELECT * FROM airports WHERE icao='{}'".format(airport)
+
         cur.execute(sql)
         row = cur.fetchone()
 
         if row is not None:
-            airport = Airport(row[1], row[2], row[3], row[4], {"lat": row[3], "lon": row[4]}, row[5], row[6], row[7], row[8])
+            airport_result = Airport(row[1], row[2], row[3], row[4], {"lat": row[3], "lon": row[4]}, row[5], row[6], row[7], row[8])
 
             if info == "coordinates":
-                return airport.position
+                return airport_result.position
             else:
-                print(airport)
+                print(airport_result)
 
         else:  # pragma: no cover
             return False
