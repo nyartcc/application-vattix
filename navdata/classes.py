@@ -14,8 +14,8 @@ class General:
 class Airport:
     icao: str = None
     name: str = None
-    latitude: str = None
-    longitude: str = None
+    latitude: float = None
+    longitude: float = None
     position: dict = None
     iata: str = None
     fir: str = None
@@ -29,7 +29,7 @@ class Airport:
     def to_dict(self):
         return asdict(self)
 
-    def info(con, airport, info):
+    def info(con, airport, info):  #
         """
          :param con:
          :param airport:
@@ -50,15 +50,8 @@ class Airport:
             else:
                 print(airport)
 
-        else:
+        else:  # pragma: no cover
             return False
-
-    def cursor(self) -> object:
-        """
-        Get Pycharm to stop complaining.
-        :return:
-        """
-        pass
 
 
 @dataclass
@@ -68,9 +61,6 @@ class Country:
     type: str = None
     id: int = field(default=None, compare=False)
 
-    @classmethod
-    def insert_country(cls):
-        print(cls)
 
 
 @dataclass
@@ -117,13 +107,13 @@ class Flight:
     arrived: bool = field(default=False, compare=False)
 
     @classmethod
-    def from_dict(cls, d):
+    def from_dict(cls, d):  # pragma: no cover
         return Airport(**d)
 
-    def to_dict(self):
+    def to_dict(self):  # pragma: no cover
         return asdict(self)
 
-    def insert(self, con, flight):
+    def insert(self, con, flight):  # pragma: no cover
         """
 
         :param flight:

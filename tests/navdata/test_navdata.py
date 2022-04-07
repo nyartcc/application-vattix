@@ -1,4 +1,5 @@
 from navdata.classes import Airport, Country
+from tools import db_init
 
 
 def test_field_access():
@@ -75,3 +76,11 @@ def test_to_dict():
         "id": 123
     }
     assert a2 == a2_expected
+
+def test_airport_info():
+    a1 = Airport("ENZV", "Stavanger", 54.1, -12, {"latitude": 54.1, "longitude": -12}, "SVG", "ENSV", 0, 123)
+
+    con = db_init.connect_db("dev.db")
+
+    assert(Airport.info(con, "ENZV", "coordinates") == {'lat': -9.191365, 'lon': 160.948836})
+    assert(Airport.info(con, "ENZV", "country") is None)
