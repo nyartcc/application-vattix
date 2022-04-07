@@ -80,7 +80,7 @@ def test_insert_malformed_general(session, test_create_base_tables):
     # Insert the general object - this should return False. However, in order to break the SQL statement, we need to
     # specify an incorrect column name, using the column value.
     non_working_insert = insert_general(session, general, column='malformed')
-    assert non_working_insert is False
+    assert non_working_insert[0] is False
 
 
 @pytest.mark.usefixtures("test_create_base_tables")
@@ -105,6 +105,20 @@ def test_insert_duplicate_country(session, test_create_base_tables):
     insert_first = insert_country(cursor, test_country)  # Insert the first country
     insert_second = insert_country(cursor, test_country)  # Insert the country again - it should still return True
     assert insert_second[0] is True  # Use the first return and verify that it is True
+
+
+@pytest.mark.usefixtures("test_create_base_tables")
+def test_insert_malformed_country(session, test_create_base_tables):
+    """
+    Test inserting a malformed country into the database
+    """
+    cursor = session  # Get the cursor
+    test_country = Country("\";")  # Create a test country
+
+    # Insert the country - this should return False. However, in order to break the SQL statement, we need to
+    # specify an incorrect column name, using the column value.
+    non_working_insert = insert_country(cursor, test_country)
+    assert non_working_insert[0] is False
 
 
 @pytest.mark.usefixtures("test_create_base_tables")
@@ -141,11 +155,10 @@ def test_insert_malformed_airport(session, test_create_base_tables):
     Test inserting a malformed airport into the database
     """
     cursor = session  # Get the cursor
-    test_airport = Airport(icao="ABCD", name="Test Airport", latitude=54.9, longitude="ten",
-                           iata="EFG", fir="HIJ", is_pseudo="yes")  # Create a test airport
+    test_airport = Airport(icao="\";")  # Create a test airport
 
     non_working_insert = insert_airport(cursor, test_airport)
-    # assert non_working_insert[0] is False
+    assert non_working_insert[0] is False
 
 
 @pytest.mark.usefixtures("test_create_base_tables")
@@ -158,6 +171,29 @@ def test_insert_fir(session, test_create_base_tables):
     insert = insert_fir(cursor, test_fir)  # Insert the FIR
 
     assert insert[0] is True  # Use the first return and verify that it is True
+
+
+def test_duplicate_fir(session, test_create_base_tables):
+    """
+    Test inserting a duplicate FIR into the database
+    """
+    cursor = session  # Get the cursor
+    test_fir = Fir(icao="ABCD", name="Test FIR", callsign_prefix="EFG", fir_boundary="HIJ")  # Create a test FIR
+
+    insert_first = insert_fir(cursor, test_fir)  # Insert the first FIR
+    insert_second = insert_fir(cursor, test_fir)  # Insert the second FIR - it should still return True
+    assert insert_second[0] is True
+
+
+def test_malformed_fir(session, test_create_base_tables):
+    """
+    Test inserting a malformed FIR into the database
+    """
+    cursor = session  # Get the cursor
+    test_fir = Fir(name="';'")  # Create a test FIR
+
+    non_working_insert = insert_fir(cursor, test_fir)
+    assert non_working_insert[0] is False  # Create a test FIR
 
 
 @pytest.mark.usefixtures("test_create_base_tables")
@@ -173,12 +209,36 @@ def test_insert_uir(session, test_create_base_tables):
 
 
 @pytest.mark.usefixtures("test_create_base_tables")
+def test_insert_duplicate_uir(session, test_create_base_tables):
+    """
+    Test inserting a duplicate UIR into the database
+    """
+    cursor = session  # Get the cursor
+    test_uir = Uir(prefix="ABC", name="Test UIR", coverage_firs="DEF")  # Create a test UIR
+
+    insert_first = insert_uir(cursor, test_uir)  # Insert the first UIR
+
+    insert_second = insert_uir(cursor, test_uir)  # Insert the second UIR - it should still return True
+    assert insert_second[0] is True
+
+
+@pytest.mark.usefixtures("test_create_base_tables")
+def test_insert_malformed_uir(session, test_create_base_tables):
+    """
+    Test inserting a malformed UIR into the database
+    """
+    cursor = session  # Get the cursor
+    test_uir = Uir(prefix="ABC", coverage_firs="';'")  # Create a test UIR
+
+    non_working_insert = insert_uir(cursor, test_uir)
+    assert non_working_insert[0] is False  # Create a test UIR
+
+
+@pytest.mark.usefixtures("test_create_base_tables")
 def test_delete_idl(session, test_create_base_tables):
     """
     Test deleting all the existing IDL entries in the database
     """
-    cursor = session  # Get the cursor
-
     delete = delete_idl(session)  # Execute the delete sql
     assert delete is True  # Verify that the row was deleted
 
@@ -193,6 +253,18 @@ def test_insert_idl(session, test_create_base_tables):
     insert = insert_idl(cursor, test_idl)  # Insert the IDL
 
     assert insert[0] is True  # Use the first return and verify that it is True
+
+@pytest.mark.usefixtures("test_create_base_tables")
+def test_insert_malformed_idl(session, test_create_base_tables):
+    """
+    Test inserting a malformed IDL into the database
+    """
+    cursor = session  # Get the cursor
+    test_idl = Idl(cord1="123.45", cord2="234.56")  # Create a test IDL
+    test_idl.cord1 = ";"  # Insert the IDL
+
+    non_working_insert = insert_idl(cursor, test_idl)
+    assert non_working_insert[0] is False  # Create a test IDL
 
 
 @pytest.mark.usefixtures("test_create_base_tables")

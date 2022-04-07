@@ -56,7 +56,7 @@ def create_base_tables(con):
                                             icao text NOT NULL,
                                             name text,
                                             latitude float,
-                                            longitude float,
+                                            longitude text CHECK (typeof('longitude') = 'text'),
                                             iata text,
                                             fir text,
                                             test text,
@@ -121,8 +121,8 @@ def insert_general(con, general, **kwargs):
             con.execute(sql, general)
         return True
     except Error as e:
-        logging.exception(e)
-        return False
+        # logging.exception(e)
+        return False, e, None
 
 
 def insert_country(con, country):
@@ -134,11 +134,9 @@ def insert_country(con, country):
     """
 
     check = check_duplicate(con, country_table, 'name', country.name)
-    print(check)
     if check[0] is True:
         sql = '''UPDATE countries SET name='{0}', code='{1}', type='{2}' WHERE id={3}'''.format(
             country.name, country.code, country.type, check[1])
-        print(sql)
         action = "Updated"
     else:
         sql = ''' REPLACE INTO countries('name', 'code', 'type')
@@ -150,8 +148,8 @@ def insert_country(con, country):
         # con.commit()
         return True, con.lastrowid, action
     except Error as e:
-        print("Failed to insert country {}. Error:".format(country.name), e)
-        return False
+        # logging.exception("Failed to insert country {}. Error:".format(country.name), e)
+        return False, e, None
 
 
 def insert_airport(con, airport):
@@ -175,15 +173,14 @@ def insert_airport(con, airport):
                     VALUES ("{0}","{1}","{2}","{3}","{4}","{5}","{6}")'''.format(
             airport.icao, airport.name, airport.latitude, airport.longitude, airport.iata, airport.fir,
             airport.is_pseudo)
+
         action = "insert"
 
     try:
         con.execute(sql)
         return True, con.lastrowid, action
-
     except Error as e:
-        print("Failed to {} airport {} :".format(action, airport.icao), e)
-        return False, None, None
+        return False, e, None
 
 
 def insert_fir(con, fir):
@@ -194,31 +191,24 @@ def insert_fir(con, fir):
     :return: If successful - True, the ID of the last inserted row as well as what action [insert/update] was performed
              If failed - False
     """
-    check = check_duplicate(con, "firs", "icao", fir.icao)
+    check = check_duplicate(con, fir_table, "icao", fir.icao)
 
-    if check is True:
-        sql = '''UPDATE firs SET (
-                firs.icao={0},
-                firs.name={1},
-                firs.callsignprefix={2},
-                firs.firboundary={3}
-                ) WHERE id={4}'''.format(
-            fir.icao, fir.name, fir.callsign_prefix, fir.fir_boundary, check[1])
+    if check[0] is True:
+        sql = '''UPDATE {5} SET icao='{0}', name='{1}', callsignprefix='{2}', firboundary='{3}' WHERE id={4}'''.format(
+            fir.icao, fir.name, fir.callsign_prefix, fir.fir_boundary, check[1], fir_table)
         action = "update"
     else:
         sql = ''' REPLACE INTO firs (icao, name, callsignprefix, firboundary) 
         VALUES ('{0}','{1}','{2}','{3}')'''.format(
             fir.icao, fir.name, fir.callsign_prefix, fir.fir_boundary)
         action = "insert"
-
     try:
-        cur = con
-        cur.execute(sql)
-        # con.commit()
-        return True, cur.lastrowid, action
+        con.execute(sql)
+        return True, con.lastrowid, action
     except Error as e:
-        print("Failed to {} thing {}:".format(action, fir.icao), e)
-        return False
+        # print(sql)
+        # print("Failed to {} FIR {}:".format(action, fir.icao), e)
+        return False, e, None
 
 
 def insert_uir(con, uir):
@@ -228,14 +218,10 @@ def insert_uir(con, uir):
     :param uir:
     :return:
     """
-    check = check_duplicate(con, uir_table, "name", uir.name)
+    check = check_duplicate(con, uir_table, "prefix", uir.prefix)
 
-    if check is True:
-        sql = '''UPDATE {0} SET (
-                {0}.prefix={1}
-                {0}.prefix={2}
-                {0}.prefix={3}
-        ) WHERE id={4}'''.format(
+    if check[0] is True:
+        sql = '''UPDATE {0} SET prefix='{1}', name='{2}', coveragefirs='{3}' WHERE id={4}'''.format(
             uir_table, uir.prefix, uir.name, uir.coverage_firs, check[1])
         action = "update"
     else:
@@ -245,13 +231,10 @@ def insert_uir(con, uir):
         action = "insert"
 
     try:
-        cur = con
-        cur.execute(sql)
-        # con.commit()
-        return True, cur.lastrowid, action
+        con.execute(sql)
+        return True, con.lastrowid, action
     except Error as e:
-        print("Failed to {} UIR {}:".format(action, uir.name), e)
-        return False
+        return False, e, None
 
 
 def delete_idl(con):
@@ -262,7 +245,7 @@ def delete_idl(con):
         # con.commit()
 
         return True
-    except Error as e:
+    except Error as e:  # pragma: no cover
         print("Failed to delete IDL", e)
         return False
 
@@ -284,8 +267,7 @@ def insert_idl(con, idl):
 
         return True, cur.lastrowid, action
     except Error as e:
-        print("Failed to modify IDL...", e)
-        return False
+        return False, None, None
 
 
 def check_duplicate(con, table, value1, value2):
