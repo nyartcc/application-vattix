@@ -119,7 +119,6 @@ if __name__ == '__main__':
             "lon": x["longitude"]
         }
 
-        print()
         # Turn the dictionary into an object
         pilot = Pilot.from_dict(x)
 
