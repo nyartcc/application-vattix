@@ -1,23 +1,20 @@
 import argparse
+import logging
 import os.path
 import time
 from sqlite3 import Error
 
-from navdata.classes import Airport, Flight
+from flights.models import FlightOld
+from navdata.classes import Airport
 from navdata.navdata import load_airac_data
 from tools import db_init, calc_functions
 import navdata.tools
 from classes.vatsim_pilot import Pilot, Flightplan
 from vatsim_data.vatsim_data import get_vatsim_data, get_vatsim_status
 
-
 global DEBUG
 global VERBOSE
 global NUMBER_OF_PILOTS
-
-NUMBER_OF_PILOTS = 0
-VERBOSE = os.environ.get('VERBOSE', False)
-DEBUG = os.environ.get('DEBUG', False)
 
 # Get commandline arguments that the user may input to customize the application.
 parser = argparse.ArgumentParser()
@@ -34,80 +31,74 @@ parser.add_argument("-d", "--debug", help="(Optional) Set DEBUG mode; sets certa
 # Parse all the available
 args = parser.parse_args()
 
-if __name__ == '__main__':
+NUMBER_OF_PILOTS = 0
+VERBOSE = os.environ.get('VERBOSE', False)
+DEBUG = os.environ.get('DEBUG', False)
 
-    # If the user specifies to load navdata (-n), run it!
+
+def main():
     # FIXME Implement: Check if navadata already exist, if not return error requiring the user to input it.
 
-    print("Loading data...")
+    logging.info("Loading data...")
     # Check if we're in production or not.
     if os.environ.get('ENV') != 'prod':
         # Check if the dev db exists, if not, create one.
         if not os.path.isfile('dev.db'):
-            print("Database not found... Creating...")
+            logging.warning("Database not found... Creating...")
             db, db_name = db_init.connect_db('dev.db')
             try:
                 db_file = db_init.sql_table(db)
                 if db_file is True:
-                    print("Success! Created new file " + db_name)
+                    logging.debug("Success! Created new file " + db_name)
                 else:
-                    print("Failed to create database... 😭 ", db_file)
+                    logging.error("Failed to create database... 😭 ", db_file)
 
                 create_tables = navdata.tools.create_base_tables(db)
-                if VERBOSE:
-                    print("Creating base tables...")
+
+                logging.info("Creating Base tables...")
+
                 if create_tables is True:
-                    print("Success! Tables created successfully! 🎉 ")
+                    logging.debug("Success! Tables created successfully! 🎉 ")
                 else:
-                    print("❌ ERROR! Failed to create base tables.")
+                    logging.error("❌ ERROR! Failed to create Base tables.")
             except Error as e:
-                print(e)
+                logging.error(e)
                 os.abort()
 
-            if VERBOSE is True:
-                print("Loading navdata...")
+            logging.debug("Loading navdata...")
 
             if args.navdata is not None:
                 load_data = load_airac_data(args.navdata, args.skip)
                 if load_data is True:
-                    print("🎉 Success! Navdata loaded.")
+                    logging.debug("🎉 Success! Navdata loaded.")
                 else:
-                    print("❌ ERROR! Failed to load navdata...", load_data[1])
+                    logging.error("❌ ERROR! Failed to load navdata...", load_data[1])
             else:
-                print("❌ ERROR! We're required to load base navdata. Please specify the location of the navdata JSON "
-                      "file using the -n flag. Need help? Use --help!")
+                logging.error("❌ ERROR! We're required to load base navdata. Please specify the location "
+                              "of the navdata JSON file using the -n flag. Need help? Use --help!")
                 os.remove(db_name)
-                print("⚠️ Aborting! Deleted file " + db_name)
+                logging.error("⚠️ Aborting! Deleted file " + db_name)
                 os.abort()
 
         else:
-            if VERBOSE is True:
-                print("Database exists... Continue.")
+            logging.debug("Database exists... Continue.")
             if args.navdata is not None:
                 load_data = load_airac_data(args.navdata, args.skip)
                 if load_data is True:
-                    if VERBOSE is True:
-                        print("Success! Navdata loaded.")
+                    logging.debug("Success! Navdata loaded.")
                 else:
-                    print("❌ ERROR! Failed to load navdata...", load_data[1])
+                    logging.error("❌ ERROR! Failed to load navdata...", load_data[1])
         con = db_init.connect_db("dev.db")
+        con = con.cursor()
 
-    if VERBOSE is True:
-        print("Data loaded OK.")
+    logging.debug("Data loaded OK.")
 
     statusJson = get_vatsim_status()
     data = statusJson["v3"].pop()
 
     live_data, status = get_vatsim_data()
 
-    if VERBOSE is True:
-        print("Data Status:" + status)
-
-    print("------------------------------------------------------------------\n")
-
-    pilot1 = live_data["pilots"][0]
-    pilot2 = live_data["pilots"][1]
-    i = 0
+    logging.debug("Data Status:" + status)
 
     NUMBER_OF_PILOTS = len(live_data["pilots"])
 
@@ -122,8 +113,7 @@ if __name__ == '__main__':
         # Turn the dictionary into an object
         pilot = Pilot.from_dict(x)
 
-        if DEBUG is True:
-            print("🐛 Debug - pilot:", pilot)
+        print("🐛 Debug - pilot:", pilot)
 
         # FIXME, for now, only deal with pilots that have a flightplan
         if pilot.flight_plan is not None:
@@ -131,7 +121,6 @@ if __name__ == '__main__':
 
             pilot_dep_airport_coords = Airport.info(con, flight_plan.departure, "coordinates")
             pilot_arr_airport_coords = Airport.info(con, flight_plan.arrival, "coordinates")
-
 
             print("🐛 Debug - pilot_arr/dep_airport_coords", pilot_arr_airport_coords, pilot_dep_airport_coords)
 
@@ -148,11 +137,13 @@ if __name__ == '__main__':
                           dist_arrival)
 
                     # FIXME Insert into flight_updates table - Temp variable name
-                    stuff = Flight(i, i, pilot.cid, pilot.latitude, pilot.longitude, pilot.position,
-                                   pilot.altitude, pilot.groundspeed, pilot.transponder, pilot.heading,
-                                   pilot.flight_plan, 1, 2, time.time(), False, False)
+                    stuff = FlightOld(i, i, pilot.cid, pilot.latitude, pilot.longitude, pilot.position,
+                                      pilot.altitude, pilot.groundspeed, pilot.transponder, pilot.heading,
+                                      pilot.flight_plan, 1, 2, time.time(), False, False)
 
-                    thing = Flight.insert(stuff, con, stuff)
+                    thing = FlightOld.insert(stuff, con, stuff)
+                    if thing[0] is not True:
+                        logging.error("Failed to insert into database")
 
                 elif dist_departure < 10 and pilot.groundspeed < 50:
                     print(pilot.callsign, ": 🛫 Probably not departed from", flight_plan.departure, "yet... Distance "
@@ -176,7 +167,13 @@ if __name__ == '__main__':
             print(pilot.callsign, ": ❌ This pilot is a dumbass and flying without a flightplan. So... We're skipping "
                                   "him.")
 
-print("\n-------- DEBUG --------")
-print("| # pilots:", NUMBER_OF_PILOTS)
-print("| DEBUG:", DEBUG)
-print("| VERBOSE:", VERBOSE)
+    logging.info("\n-------- DEBUG --------")
+    logging.info("| # pilots: {}".format(NUMBER_OF_PILOTS))
+
+
+if __name__ == '__main__':
+    level = logging.INFO
+    fmt = '[%(levelname)s] %(asctime)s - %(message)s'
+    logging.basicConfig(level=level, format=fmt)
+
+    main()

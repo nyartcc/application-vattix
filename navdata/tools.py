@@ -40,7 +40,7 @@ def create_table(con, create_table_sql):
 
 def create_base_tables(con):
     """
-    Creates the initial base tables for the database. Get the table names from the config file.
+    Creates the initial Base tables for the database. Get the table names from the config file.
     :param con: The connection object.
     :return: True / False. If false, also return the error message.
     """

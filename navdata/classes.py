@@ -128,10 +128,10 @@ class Flight:
         VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)'''
 
         try:
-            cur = con.cursor()
-            cur.execute(sql, flight.to_dict())
+            #cur = con.cursor()
+            con.execute(sql, flight.to_dict())
             con.commit()
-            return True, cur.lastrowid
+            return True, con.lastrowid
         except Error as e:
             print(e)
             return False, e

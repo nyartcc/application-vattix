@@ -41,9 +41,9 @@ def test_create_table(session):
 
 
 @pytest.fixture
-def test_create_base_tables(session):  # Try to create the base tables
+def test_create_base_tables(session):  # Try to create the Base tables
     """
-    Test creating the base tables
+    Test creating the Base tables
     """
     create_tables = create_base_tables(session)
     assert create_tables is True  # Verify that the tables were created
