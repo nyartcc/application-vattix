@@ -10,7 +10,7 @@ dev.db
 scratch.py # Scratch file.
 
 ## Submodule, so ignore it.
-vatspy_dat_converter/
+../vatspy_dat_converter/vatspy_dat_converter/
 
 
 
