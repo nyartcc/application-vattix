@@ -17,7 +17,7 @@ class Pilot:
     heading: int
     qnh_i_hg: float
     qnh_mb: float
-    flight_plan: dict
+    flight_plan: str
     logon_time: str
     last_updated: str
     id: int = field(default=None, compare=False)
