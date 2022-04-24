@@ -1,15 +1,14 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.util.compat import contextmanager
 
-from config import DATABASE_URI
-from models import Base
+from flights.config import DATABASE_URI
 
-import yaml
 
-engine = create_engine(DATABASE_URI)
-
+engine = create_engine(DATABASE_URI, pool_size=20, max_overflow=0)
 Session = sessionmaker(bind=engine)
+Base = declarative_base()
 
 
 @contextmanager
