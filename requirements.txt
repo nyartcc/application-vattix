@@ -2,7 +2,7 @@ numpy==1.22.3
 pytz==2022.1
 requests==2.27.1
 pytest~=7.1.1
-setuptools==61.3.1
+setuptools==65.5.1
 SQLAlchemy~=1.4.35
 PyYAML~=6.0
 Flask~=2.1.1
